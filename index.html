@@ -477,7 +477,11 @@ select.input{cursor:pointer}
         <h2 class="font-cond" style="font-weight:700;font-size:1.4rem;text-transform:uppercase">Join Auction Room</h2>
         <p class="text-muted text-sm" style="margin-top:.3rem">Enter the 6-character room code</p>
       </div>
-      <input class="code-input" id="join-code" maxlength="6" placeholder="ABC123" oninput="this.value=this.value.toUpperCase();lookupRoom()">
+      <input class="code-input" id="join-code" maxlength="6" placeholder="ABC123"
+        oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');lookupRoom()"
+        onkeydown="if(event.key==='Enter')lookupRoom()">
+      <button class="btn btn-outline" style="width:100%;justify-content:center;margin-top:.6rem" onclick="lookupRoom()">🔍 Find Room</button>
+      <p style="text-align:center;font-size:.75rem;color:var(--muted);margin-top:.6rem">Demo room code: <strong style="color:var(--gold);letter-spacing:.15em">IPL123</strong></p>
       <div id="join-preview" style="display:none" class="room-preview">
         <div style="display:flex;align-items:center;gap:.85rem">
           <span id="join-sport-icon" style="font-size:2rem"></span>
@@ -981,24 +985,32 @@ function doCreateRoom() {
 //  JOIN ROOM
 // ══════════════════════════════════════════════════════════════
 function lookupRoom() {
-  const code = document.getElementById('join-code').value.trim().toUpperCase();
+  const raw = document.getElementById('join-code').value;
+  const code = raw.trim().toUpperCase();
   const preview = document.getElementById('join-preview');
   const errEl = document.getElementById('join-error');
-  if (code.length < 4) { preview.style.display='none'; errEl.style.display='none'; return; }
-  const r = rooms.find(rm => rm.code === code);
+
+  // Reset UI while typing
+  preview.style.display = 'none';
+  errEl.style.display = 'none';
+
+  // Only attempt lookup once user has typed all 6 characters
+  if (code.length < 6) return;
+
+  // Case-insensitive, whitespace-safe comparison
+  const r = rooms.find(rm => rm.code.trim().toUpperCase() === code);
+
   if (!r) {
-    errEl.textContent = 'Room not found. Check the code.';
+    errEl.textContent = 'No room found with code "' + code + '". Double-check with your admin.';
     errEl.style.display = 'block';
-    preview.style.display = 'none';
     return;
   }
-  errEl.style.display = 'none';
-  const rTeams = teams.filter(t=>t.roomId===r.id);
-  document.getElementById('join-sport-icon').textContent = SPORT_ICONS[r.sport];
+
+  const rTeams = teams.filter(t => t.roomId === r.id);
+  document.getElementById('join-sport-icon').textContent = SPORT_ICONS[r.sport] || '🏆';
   document.getElementById('join-room-name').textContent = r.name;
-  document.getElementById('join-room-meta').textContent = `${r.sport} · ${rTeams.length}/${r.maxTeams} teams · ${r.status}`;
+  document.getElementById('join-room-meta').textContent = (r.customSportName || r.sport) + ' · ' + rTeams.length + '/' + r.maxTeams + ' teams · ' + r.status;
   preview.style.display = 'block';
-  preview._roomId = r.id;
 }
 function doJoinRoom() {
   const code = document.getElementById('join-code').value.trim().toUpperCase();
@@ -1947,3 +1959,4 @@ goTo('auth');
 </script>
 </body>
 </html>
+
