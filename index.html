@@ -470,35 +470,10 @@ select.input{cursor:pointer}
      JOIN ROOM
 ═══════════════════════════════════════════ -->
 <div id="screen-join" class="screen">
-  <div class="join-wrap">
-    <div class="join-card">
-      <div style="text-align:center;margin-bottom:1.5rem">
-        <div style="font-size:2.5rem;margin-bottom:.5rem">🎯</div>
-        <h2 class="font-cond" style="font-weight:700;font-size:1.4rem;text-transform:uppercase">Join Auction Room</h2>
-        <p class="text-muted text-sm" style="margin-top:.3rem">Enter the room code from your admin</p>
-      </div>
-      <div style="display:flex;gap:.5rem">
-        <input class="code-input" id="join-code" maxlength="6" placeholder="IPL123"
-          style="flex:1;font-size:1.4rem;padding:.65rem .8rem;letter-spacing:.2em"
-          onkeyup="joinCodeKeyup(event)">
-        <button class="btn btn-gold" style="padding:.65rem 1.1rem;font-size:1rem" onclick="doLookupRoom()">Find</button>
-      </div>
-      <div id="join-error" style="display:none;color:var(--red);font-size:.82rem;text-align:center;margin-top:.6rem;padding:.5rem;background:rgba(239,35,60,.08);border-radius:6px;border:1px solid rgba(239,35,60,.2)"></div>
-      <div id="join-preview" style="display:none" class="room-preview">
-        <div style="display:flex;align-items:center;gap:.85rem">
-          <span id="join-sport-icon" style="font-size:2rem"></span>
-          <div>
-            <div id="join-room-name" style="font-weight:700;font-size:1rem"></div>
-            <div id="join-room-meta" class="text-muted text-sm"></div>
-          </div>
-        </div>
-        <button class="btn btn-gold" style="width:100%;justify-content:center;margin-top:.85rem;padding:.65rem" onclick="doJoinRoom()">⚡ Enter Room</button>
-      </div>
-      <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border)">
-        <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.6rem;font-weight:600">— Or pick from available rooms —</div>
-        <div id="join-rooms-list"></div>
-      </div>
-    </div>
+  <div class="page-wrap">
+    <h1 class="page-title">Join Auction Room</h1>
+    <p class="page-sub">Click any room below to enter, or ask your admin to share a room</p>
+    <div id="join-all-rooms"></div>
   </div>
 </div>
 
@@ -803,7 +778,7 @@ function goTo(screen) {
   nav.style.display = screen === 'auth' ? 'none' : 'flex';
   updateNav();
   if (screen === 'dashboard') renderDashboard();
-  if (screen === 'join') { renderJoinScreen(); document.getElementById('join-preview').style.display='none'; document.getElementById('join-error').style.display='none'; document.getElementById('join-code').value=''; }
+  if (screen === 'join') renderJoinScreen();
 }
 
 function openModal(id) { document.getElementById(id).classList.add('open'); }
@@ -992,88 +967,53 @@ function doCreateRoom() {
 // ══════════════════════════════════════════════════════════════
 
 function renderJoinScreen() {
-  // Show all rooms as clickable options (fallback to code entry)
-  const list = document.getElementById('join-rooms-list');
-  if (!list) return;
-  if (!rooms.length) {
-    list.innerHTML = '<div class="text-muted text-sm" style="text-align:center;padding:.5rem">No rooms available yet</div>';
+  var container = document.getElementById('join-all-rooms');
+  if (!container) return;
+
+  if (rooms.length === 0) {
+    container.innerHTML = '<div class="empty-state"><span class="empty-icon">🏟</span><p class="empty-text">No rooms available yet.<br>Ask your admin to create one.</p></div>';
     return;
   }
-  list.innerHTML = rooms.map(r => {
-    const rTeams = teams.filter(t => t.roomId === r.id);
-    return `<div onclick="quickJoin('${r.id}')" style="display:flex;align-items:center;gap:.75rem;padding:.65rem .75rem;border:1px solid var(--border);border-radius:8px;cursor:pointer;margin-bottom:.4rem;transition:all .2s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
-      <span style="font-size:1.5rem">${SPORT_ICONS[r.sport]||'🏆'}</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
-        <div style="font-size:.75rem;color:var(--muted)">${rTeams.length}/${r.maxTeams} teams · ${r.status}</div>
-      </div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--gold);letter-spacing:.1em;font-size:.9rem">${r.code}</div>
-    </div>`;
-  }).join('');
+
+  var html = '';
+  for (var i = 0; i < rooms.length; i++) {
+    var r = rooms[i];
+    var rTeams = teams.filter(function(t){ return t.roomId === r.id; });
+    var rPlayers = players.filter(function(p){ return p.roomId === r.id; });
+    var statusClass = r.status === 'active' ? 'badge-green' : r.status === 'completed' ? 'badge-gray' : 'badge-blue';
+    var sportIcon = SPORT_ICONS[r.sport] || '🏆';
+    html += '<div onclick="enterRoomDirect('' + r.id + '')" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.25rem;cursor:pointer;margin-bottom:.85rem;transition:all .2s;position:relative;overflow:hidden" onmouseover="this.style.borderColor='rgba(245,166,35,.5)';this.style.background='var(--raised)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--card)'">';
+    html += '<div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),transparent)"></div>';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem">';
+    html += '<div style="display:flex;align-items:center;gap:.85rem">';
+    html += '<span style="font-size:2.2rem">' + sportIcon + '</span>';
+    html += '<div>';
+    html += '<div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.15rem">' + r.name + '</div>';
+    html += '<div style="font-size:.78rem;color:var(--muted);margin-top:.2rem;text-transform:capitalize">' + (r.customSportName || r.sport) + ' &nbsp;·&nbsp; ' + rTeams.length + ' teams &nbsp;·&nbsp; ' + rPlayers.length + ' players</div>';
+    html += '</div></div>';
+    html += '<div style="display:flex;align-items:center;gap:.75rem">';
+    html += '<span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--gold);letter-spacing:.12em;font-size:1rem">' + r.code + '</span>';
+    html += '<span class="badge ' + statusClass + '">' + r.status + '</span>';
+    html += '<span style="color:var(--gold);font-size:1.3rem">→</span>';
+    html += '</div></div></div>';
+  }
+
+  container.innerHTML = html;
 }
 
-function quickJoin(roomId) {
-  const r = rooms.find(rm => rm.id === roomId);
-  if (!r) return;
+function enterRoomDirect(roomId) {
+  var r = null;
+  for (var i = 0; i < rooms.length; i++) {
+    if (rooms[i].id === roomId) { r = rooms[i]; break; }
+  }
+  if (!r) { toast('Room not found', 'error'); return; }
   APP.currentRoom = r;
   toast('Entered ' + r.name + '!', 'success');
   goTo('lobby');
   renderLobby();
 }
 
-function joinCodeKeyup(e) {
-  // Strip anything not alphanumeric, force uppercase
-  const input = document.getElementById('join-code');
-  const cleaned = input.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-  if (input.value !== cleaned) input.value = cleaned;
-  // Auto-search when 6 chars reached or Enter pressed
-  if (cleaned.length === 6 || e.key === 'Enter') doLookupRoom();
-}
-
-function doLookupRoom() {
-  const input = document.getElementById('join-code');
-  const code = input.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-  const preview = document.getElementById('join-preview');
-  const errEl = document.getElementById('join-error');
-
-  preview.style.display = 'none';
-  errEl.style.display = 'none';
-
-  if (!code) { errEl.textContent = 'Please enter a room code.'; errEl.style.display = 'block'; return; }
-  if (code.length < 6) { errEl.textContent = 'Code must be 6 characters (you entered ' + code.length + ').'; errEl.style.display = 'block'; return; }
-
-  // Search rooms — fully normalized comparison
-  const r = rooms.find(rm => rm.code.replace(/[^a-zA-Z0-9]/g,'').toUpperCase() === code);
-
-  if (!r) {
-    errEl.textContent = 'No room found with code "' + code + '". Available codes: ' + rooms.map(rm=>rm.code).join(', ');
-    errEl.style.display = 'block';
-    return;
-  }
-
-  const rTeams = teams.filter(t => t.roomId === r.id);
-  document.getElementById('join-sport-icon').textContent = SPORT_ICONS[r.sport] || '🏆';
-  document.getElementById('join-room-name').textContent = r.name;
-  document.getElementById('join-room-meta').textContent = (r.customSportName || r.sport) + ' · ' + rTeams.length + '/' + r.maxTeams + ' teams · ' + r.status;
-  preview.style.display = 'block';
-  preview._foundRoomId = r.id;
-}
-
-function doJoinRoom() {
-  const preview = document.getElementById('join-preview');
-  // Use the stored room id from lookup (most reliable)
-  const roomId = preview._foundRoomId;
-  const r = roomId ? rooms.find(rm => rm.id === roomId) : null;
-  if (!r) { toast('Room not found — try the code again', 'error'); return; }
-  APP.currentRoom = r;
-  document.getElementById('join-code').value = '';
-  preview.style.display = 'none';
-  toast('Entered ' + r.name + '!', 'success');
-  goTo('lobby');
-  renderLobby();
-}
-
-function enterRoom(roomId) {
+function enterRoomfunction enterRoom(roomId) {
   APP.currentRoom = rooms.find(r => r.id === roomId);
   goTo('lobby');
   renderLobby();
@@ -2005,3 +1945,4 @@ goTo('auth');
 </script>
 </body>
 </html>
+
