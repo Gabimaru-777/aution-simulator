@@ -3,1946 +3,1692 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ProBid Arena 🏆</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<title>ProBid Arena — Live Sports Auction</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
 :root {
-  --gold: #F5A623;
-  --gold2: #FFD166;
-  --red: #EF233C;
-  --green: #06D6A0;
-  --blue: #118AB2;
-  --void: #07070F;
-  --deep: #0D0D1C;
-  --card: #131325;
-  --raised: #1A1A30;
-  --border: #252540;
-  --border2: #323258;
-  --text: #E8E8F0;
-  --muted: #888899;
-  --dim: #444460;
+  --gold: #FFD700;
+  --gold2: #FFA500;
+  --red: #FF3B3B;
+  --green: #00E676;
+  --blue: #00B4FF;
+  --purple: #9B59B6;
+  --bg0: #080B10;
+  --bg1: #0D1117;
+  --bg2: #141B26;
+  --bg3: #1C2535;
+  --bg4: #243044;
+  --text: #E8ECF4;
+  --muted: #7A8BA0;
+  --border: rgba(255,215,0,0.15);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--void);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden}
-.font-display{font-family:'Bebas Neue',sans-serif;letter-spacing:.05em}
-.font-cond{font-family:'Barlow Condensed',sans-serif}
+body{font-family:'DM Sans',sans-serif;background:var(--bg0);color:var(--text);min-height:100vh;overflow-x:hidden}
+h1,h2,h3,.orb{font-family:'Orbitron',monospace}
+.raj{font-family:'Rajdhani',sans-serif}
 
-/* ── Scrollbar ── */
-::-webkit-scrollbar{width:5px}
-::-webkit-scrollbar-track{background:var(--deep)}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+/* ====== SCROLLBAR ====== */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg1)}
+::-webkit-scrollbar-thumb{background:var(--gold);border-radius:3px}
 
-/* ── Layout ── */
-#app{min-height:100vh;display:flex;flex-direction:column}
-.screen{display:none;flex:1;flex-direction:column}
-.screen.active{display:flex}
+/* ====== UTILITY ====== */
+.hidden{display:none!important}
+.flex{display:flex}.grid{display:grid}
+.center{align-items:center;justify-content:center}
+.gap1{gap:8px}.gap2{gap:16px}.gap3{gap:24px}
+.p1{padding:8px}.p2{padding:16px}.p3{padding:24px}
+.mb1{margin-bottom:8px}.mb2{margin-bottom:16px}.mb3{margin-bottom:24px}
+.fw{width:100%}.fh{height:100%}
+.rad{border-radius:12px}.rad2{border-radius:20px}
+.bold{font-weight:700}.muted{color:var(--muted)}
+.gold{color:var(--gold)}.green{color:var(--green)}.red{color:var(--red)}.blue{color:var(--blue)}
 
-/* ── Navbar ── */
-nav{
-  background:var(--deep);
-  border-bottom:1px solid var(--border);
-  padding:0 1.5rem;
-  height:58px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  position:sticky;top:0;z-index:100;
-  flex-shrink:0;
+/* ====== ANIMATIONS ====== */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes glow{0%,100%{box-shadow:0 0 20px var(--gold),0 0 40px rgba(255,215,0,.3)}50%{box-shadow:0 0 40px var(--gold),0 0 80px rgba(255,215,0,.5)}}
+@keyframes slideIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+@keyframes bidFlash{0%{background:rgba(255,215,0,.4)}100%{background:transparent}}
+@keyframes countPulse{0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes popIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+@keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+
+/* ====== BACKGROUND ====== */
+.bg-animated{position:fixed;inset:0;z-index:-1;overflow:hidden}
+.bg-animated::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(255,215,0,.05) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(0,180,255,.05) 0%,transparent 60%),radial-gradient(ellipse at 60% 80%,rgba(155,89,182,.05) 0%,transparent 60%)}
+.scanline{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(transparent,rgba(255,215,0,.1),transparent);animation:scanline 8s linear infinite;pointer-events:none}
+.grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(255,215,0,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,215,0,.03) 1px,transparent 1px);background-size:60px 60px}
+
+/* ====== SCREENS ====== */
+.screen{min-height:100vh;display:flex;flex-direction:column;animation:fadeIn .3s ease}
+
+/* ====== LOGIN SCREEN ====== */
+#loginScreen{align-items:center;justify-content:center;padding:20px}
+.logo-wrap{text-align:center;margin-bottom:48px}
+.logo-icon{font-size:72px;display:block;line-height:1;margin-bottom:16px;filter:drop-shadow(0 0 20px var(--gold))}
+.logo-title{font-size:clamp(28px,6vw,52px);font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,var(--gold),var(--gold2),#FF6B35);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none}
+.logo-sub{font-family:'Rajdhani',sans-serif;font-size:14px;letter-spacing:8px;color:var(--muted);margin-top:8px;text-transform:uppercase}
+
+.auth-card{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:480px;position:relative;overflow:hidden}
+.auth-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold2),var(--blue))}
+.tab-row{display:flex;gap:4px;background:var(--bg1);border-radius:10px;padding:4px;margin-bottom:32px}
+.tab-btn{flex:1;padding:10px;border:none;background:none;color:var(--muted);border-radius:8px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600;letter-spacing:1px;text-transform:uppercase;transition:.2s}
+.tab-btn.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-weight:700}
+.form-group{margin-bottom:20px}
+label{display:block;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-family:'Rajdhani',sans-serif}
+input,select,textarea{width:100%;padding:14px 18px;background:var(--bg3);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:.2s}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,215,0,.1)}
+select option{background:var(--bg3)}
+.btn{padding:14px 28px;border:none;border-radius:10px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;transition:.2s;position:relative;overflow:hidden}
+.btn::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,.1);opacity:0;transition:.2s}
+.btn:hover::after{opacity:1}
+.btn:active{transform:scale(.98)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000}
+.btn-outline{background:transparent;border:1px solid var(--gold);color:var(--gold)}
+.btn-red{background:linear-gradient(135deg,#FF3B3B,#CC0000);color:#fff}
+.btn-green{background:linear-gradient(135deg,#00E676,#00B050);color:#000}
+.btn-blue{background:linear-gradient(135deg,var(--blue),#0066FF);color:#fff}
+.btn-sm{padding:8px 16px;font-size:13px}
+.btn-xs{padding:6px 12px;font-size:12px;border-radius:6px}
+.fw-btn{width:100%;display:block;text-align:center}
+
+/* ====== LOBBY ====== */
+#lobbyScreen{padding:20px}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:var(--bg2);border:1px solid var(--border);border-radius:16px;margin-bottom:24px}
+.topbar-logo{font-size:20px;font-weight:900;letter-spacing:3px;background:linear-gradient(135deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topbar-user{display:flex;align-items:center;gap:12px}
+.avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;border:2px solid var(--gold)}
+.badge{padding:4px 12px;border-radius:20px;font-size:11px;letter-spacing:2px;font-family:'Rajdhani',sans-serif;font-weight:700;text-transform:uppercase}
+.badge-admin{background:rgba(255,215,0,.2);color:var(--gold);border:1px solid rgba(255,215,0,.3)}
+.badge-bidder{background:rgba(0,180,255,.2);color:var(--blue);border:1px solid rgba(0,180,255,.3)}
+
+.room-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;margin-bottom:24px}
+.room-card{background:var(--bg2);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:24px;cursor:pointer;transition:.3s;position:relative;overflow:hidden}
+.room-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.room-card.cricket::before{background:linear-gradient(90deg,#00C853,#69F0AE)}
+.room-card.football::before{background:linear-gradient(90deg,#FF6D00,#FFAB40)}
+.room-card.basketball::before{background:linear-gradient(90deg,#E53935,#EF9A9A)}
+.room-card.custom::before{background:linear-gradient(90deg,#7B1FA2,#CE93D8)}
+.room-card:hover{transform:translateY(-4px);border-color:var(--border);box-shadow:0 20px 40px rgba(0,0,0,.4)}
+.sport-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:12px}
+.sport-cricket{background:rgba(0,200,83,.15);color:#69F0AE}
+.sport-football{background:rgba(255,109,0,.15);color:#FFAB40}
+.sport-basketball{background:rgba(229,57,53,.15);color:#EF9A9A}
+.sport-custom{background:rgba(123,31,162,.15);color:#CE93D8}
+.room-name{font-size:20px;font-weight:700;margin-bottom:8px;font-family:'Rajdhani',sans-serif;letter-spacing:1px}
+.room-meta{font-size:13px;color:var(--muted);display:flex;gap:16px;margin-bottom:16px}
+.room-stats{display:flex;gap:12px}
+.room-stat{background:var(--bg3);border-radius:8px;padding:8px 12px;flex:1;text-align:center}
+.room-stat .val{font-size:18px;font-weight:700;font-family:'Rajdhani',sans-serif}
+.room-stat .lbl{font-size:10px;color:var(--muted);letter-spacing:1px}
+
+/* ====== CREATE ROOM MODAL ====== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;animation:popIn .2s ease}
+.modal-header{padding:24px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:1}
+.modal-title{font-size:20px;font-weight:700;font-family:'Rajdhani',sans-serif;letter-spacing:2px}
+.modal-body{padding:24px}
+.close-btn{width:36px;height:36px;border:none;background:var(--bg3);color:var(--muted);border-radius:8px;cursor:pointer;font-size:18px;transition:.2s}
+.close-btn:hover{background:var(--red);color:#fff}
+
+/* ====== AUCTION ROOM ====== */
+#auctionScreen{display:none;padding:0}
+.auction-layout{display:grid;grid-template-columns:280px 1fr 280px;gap:0;height:100vh;overflow:hidden}
+@media(max-width:1200px){.auction-layout{grid-template-columns:1fr;height:auto;overflow:auto}}
+
+/* SIDEBAR */
+.sidebar{background:var(--bg1);border-right:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-right{border-right:none;border-left:1px solid rgba(255,255,255,.05)}
+.sidebar-header{padding:16px;border-bottom:1px solid rgba(255,255,255,.05);font-family:'Rajdhani',sans-serif;font-size:13px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+.sidebar-body{flex:1;overflow-y:auto;padding:12px}
+
+/* TEAM CARDS IN SIDEBAR */
+.team-mini{background:var(--bg2);border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid rgba(255,255,255,.04);transition:.2s}
+.team-mini.leading{border-color:rgba(255,215,0,.4);background:rgba(255,215,0,.05)}
+.team-mini-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.team-emoji{font-size:24px}
+.team-name-s{font-weight:700;font-size:14px;font-family:'Rajdhani',sans-serif;letter-spacing:1px}
+.budget-bar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:6px}
+.budget-fill{height:100%;border-radius:3px;transition:.5s}
+.budget-text{display:flex;justify-content:space-between;font-size:11px;margin-top:4px}
+
+/* BID HISTORY */
+.bid-item{padding:10px;border-radius:8px;margin-bottom:6px;animation:slideIn .3s ease;font-size:13px}
+.bid-item.new{animation:bidFlash .5s ease}
+.bid-time{font-size:10px;color:var(--muted)}
+
+/* ====== CENTER STAGE ====== */
+.stage{background:var(--bg0);overflow-y:auto;display:flex;flex-direction:column}
+.stage-inner{padding:20px;flex:1}
+
+/* AUCTION TOP BAR */
+.auction-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding:12px 20px;background:var(--bg2);border-radius:14px;border:1px solid var(--border)}
+.room-code-badge{background:var(--bg3);border:1px solid var(--border);padding:6px 14px;border-radius:8px;font-family:'Orbitron',monospace;font-size:12px;letter-spacing:3px}
+
+/* PLAYER STAGE */
+.player-stage{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:20px;padding:30px;margin-bottom:20px;position:relative;overflow:hidden;animation:glow 3s ease-in-out infinite}
+.player-stage::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(255,215,0,.08) 0%,transparent 60%);pointer-events:none}
+.ps-top{display:flex;gap:24px;align-items:flex-start;margin-bottom:24px}
+.player-avatar-big{width:120px;height:120px;border-radius:16px;background:linear-gradient(135deg,var(--bg4),var(--bg3));border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:48px;flex-shrink:0;position:relative}
+.player-pos-badge{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);background:var(--gold);color:#000;padding:2px 10px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:1px;white-space:nowrap;font-family:'Rajdhani',sans-serif}
+.player-info{flex:1}
+.player-name-big{font-size:clamp(22px,4vw,34px);font-weight:900;font-family:'Rajdhani',sans-serif;letter-spacing:2px;line-height:1.1;margin-bottom:8px}
+.player-meta-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.meta-chip{background:var(--bg4);border-radius:20px;padding:4px 12px;font-size:12px;display:flex;align-items:center;gap:4px}
+.rating-ring{display:flex;align-items:center;gap:8px;margin-top:8px}
+.rating-num{font-size:28px;font-weight:900;font-family:'Orbitron',monospace}
+.rating-stars{font-size:18px}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-bottom:20px}
+.stat-box{background:var(--bg1);border-radius:10px;padding:12px;text-align:center;border:1px solid rgba(255,255,255,.04)}
+.stat-val{font-size:20px;font-weight:700;font-family:'Rajdhani',sans-serif;color:var(--gold)}
+.stat-lbl{font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:2px;text-transform:uppercase}
+
+/* BID SECTION */
+.bid-section{background:var(--bg1);border-radius:16px;padding:20px;border:1px solid rgba(255,255,255,.06)}
+.current-bid-display{text-align:center;margin-bottom:20px}
+.bid-label{font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:8px;font-family:'Rajdhani',sans-serif;text-transform:uppercase}
+.bid-amount{font-size:clamp(36px,8vw,60px);font-weight:900;font-family:'Orbitron',monospace;background:linear-gradient(135deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;animation:countPulse .3s ease}
+.bid-by{font-size:14px;color:var(--muted);margin-top:8px}
+.bid-by span{color:var(--text);font-weight:600}
+
+/* TIMER */
+.timer-wrap{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:20px}
+.timer-circle{width:80px;height:80px;border-radius:50%;border:3px solid;display:flex;align-items:center;justify-content:center;position:relative}
+.timer-num{font-size:28px;font-weight:900;font-family:'Orbitron',monospace}
+.timer-circle.danger{border-color:var(--red);animation:pulse 1s infinite;box-shadow:0 0 20px rgba(255,59,59,.4)}
+.timer-circle.warning{border-color:var(--gold);box-shadow:0 0 15px rgba(255,215,0,.3)}
+.timer-circle.safe{border-color:var(--green)}
+
+/* BID INPUT */
+.bid-input-row{display:grid;grid-template-columns:1fr auto;gap:12px;margin-bottom:12px}
+.quick-bids{display:flex;gap:8px;flex-wrap:wrap}
+.quick-bid-btn{background:var(--bg3);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px 14px;color:var(--text);cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;transition:.2s}
+.quick-bid-btn:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ====== PLAYER LIST SIDEBAR ====== */
+.player-item{background:var(--bg2);border-radius:10px;padding:10px 12px;margin-bottom:6px;cursor:pointer;border:1px solid rgba(255,255,255,.04);transition:.2s;display:flex;align-items:center;gap:10px}
+.player-item:hover{border-color:rgba(255,215,0,.2)}
+.player-item.current{border-color:var(--gold);background:rgba(255,215,0,.05)}
+.player-item.sold{opacity:.5}
+.player-item-emoji{font-size:24px}
+.player-item-info{flex:1;min-width:0}
+.player-item-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player-item-meta{font-size:11px;color:var(--muted)}
+.sold-tag{font-size:10px;background:rgba(0,230,118,.15);color:var(--green);padding:2px 6px;border-radius:4px;font-family:'Rajdhani',sans-serif;font-weight:700}
+.unsold-tag{font-size:10px;background:rgba(255,59,59,.15);color:var(--red);padding:2px 6px;border-radius:4px;font-family:'Rajdhani',sans-serif;font-weight:700}
+
+/* ====== ANALYTICS SCREEN ====== */
+#analyticsScreen{padding:20px;display:none}
+.analytics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;margin-bottom:24px}
+.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px}
+.chart-title{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;margin-bottom:20px;color:var(--gold);text-transform:uppercase}
+.chart-canvas-wrap{height:220px;position:relative}
+
+/* ====== SUMMARY CARDS ====== */
+.summary-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.summary-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center}
+.summary-num{font-size:32px;font-weight:900;font-family:'Orbitron',monospace;margin-bottom:4px}
+.summary-lbl{font-size:12px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;font-family:'Rajdhani',sans-serif}
+
+/* ====== NOTIFICATIONS ====== */
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.toast{background:var(--bg3);border-radius:12px;padding:14px 20px;font-size:14px;border-left:4px solid var(--gold);animation:slideIn .3s ease;pointer-events:auto;max-width:320px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.toast.success{border-color:var(--green)}
+.toast.error{border-color:var(--red)}
+.toast.info{border-color:var(--blue)}
+
+/* ====== SOLD OVERLAY ====== */
+.sold-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:2000;display:flex;align-items:center;justify-content:center;animation:fadeIn .3s ease}
+.sold-card{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:2px solid var(--gold);border-radius:24px;padding:48px;text-align:center;animation:popIn .4s cubic-bezier(.34,1.56,.64,1);max-width:500px;width:90%}
+.sold-stamp{font-size:80px;margin-bottom:8px;animation:glow 1s ease-in-out infinite}
+.sold-text{font-size:clamp(40px,10vw,72px);font-weight:900;font-family:'Orbitron',monospace;background:linear-gradient(135deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:4px}
+.sold-player{font-size:28px;font-family:'Rajdhani',sans-serif;font-weight:700;margin-top:12px}
+.sold-details{margin-top:16px;font-size:20px;color:var(--muted)}
+.sold-details strong{color:var(--gold);font-size:28px}
+
+/* ====== UNSOLD OVERLAY ====== */
+.unsold-overlay .sold-stamp{filter:grayscale(1)}
+.unsold-overlay .sold-text{background:linear-gradient(135deg,var(--red),#FF6B35);-webkit-background-clip:text}
+
+/* ====== AI SUGGEST ====== */
+.ai-suggest{background:linear-gradient(135deg,rgba(155,89,182,.2),rgba(0,180,255,.1));border:1px solid rgba(155,89,182,.4);border-radius:12px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.ai-icon{font-size:28px}
+.ai-text{flex:1}
+.ai-label{font-size:11px;color:var(--purple);letter-spacing:2px;font-family:'Rajdhani',sans-serif;font-weight:700;text-transform:uppercase}
+.ai-value{font-size:22px;font-weight:700;font-family:'Orbitron',monospace;color:var(--text)}
+.ai-note{font-size:11px;color:var(--muted)}
+
+/* ====== ADMIN CONTROLS ====== */
+.admin-controls{background:var(--bg2);border-radius:14px;padding:16px;margin-bottom:16px;border:1px solid rgba(255,215,0,.2)}
+.admin-title{font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:12px;font-family:'Rajdhani',sans-serif;font-weight:700;text-transform:uppercase}
+.control-row{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ====== TABS ====== */
+.screen-tabs{display:flex;gap:4px;background:var(--bg2);border-radius:12px;padding:4px;margin-bottom:20px}
+.screen-tab{padding:10px 20px;border:none;background:none;color:var(--muted);border-radius:8px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;letter-spacing:1px;text-transform:uppercase;transition:.2s}
+.screen-tab.active{background:var(--bg4);color:var(--gold)}
+
+/* ====== LOADING ====== */
+.loader{width:40px;height:40px;border:3px solid var(--bg3);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:40px auto}
+
+/* ====== WAITING STATE ====== */
+.waiting{text-align:center;padding:60px 20px}
+.waiting-icon{font-size:64px;margin-bottom:24px;animation:pulse 2s infinite}
+.waiting-text{font-size:24px;font-family:'Rajdhani',sans-serif;font-weight:700;margin-bottom:8px;letter-spacing:2px}
+
+/* ====== RESPONSIVE ====== */
+@media(max-width:1200px){
+  .auction-layout{display:block}
+  .sidebar,.sidebar-right{height:auto;max-height:300px}
+  .stage{min-height:auto}
 }
-.logo{display:flex;align-items:center;gap:.6rem;cursor:pointer}
-.logo-icon{
-  width:36px;height:36px;border-radius:8px;
-  background:linear-gradient(135deg,#d4870a,#F5A623);
-  display:flex;align-items:center;justify-content:center;
-  font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:#000;
-  box-shadow:0 0 14px rgba(245,166,35,.35);
+@media(max-width:640px){
+  .ps-top{flex-direction:column;align-items:center;text-align:center}
+  .player-meta-row{justify-content:center}
+  .bid-input-row{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:repeat(3,1fr)}
 }
-.logo-text{line-height:1}
-.logo-name{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.12em;color:#fff}
-.logo-sub{font-size:.6rem;letter-spacing:.25em;color:var(--gold);text-transform:uppercase}
-.nav-right{display:flex;align-items:center;gap:.75rem}
-.nav-user{display:flex;align-items:center;gap:.5rem;font-size:.85rem}
-.avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;color:#fff}
-.connection-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
-
-/* ── Buttons ── */
-.btn{border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:7px;transition:all .18s ease;display:inline-flex;align-items:center;justify-content:center;gap:.4rem}
-.btn-gold{background:linear-gradient(135deg,#c98300,#F5A623);color:#000;padding:.55rem 1.3rem;font-size:.9rem}
-.btn-gold:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(245,166,35,.45)}
-.btn-gold:active{transform:none}
-.btn-gold:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
-.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border2);padding:.55rem 1.3rem;font-size:.9rem}
-.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
-.btn-sm{padding:.35rem .9rem;font-size:.8rem}
-.btn-danger{background:linear-gradient(135deg,#a00,var(--red));color:#fff;padding:.55rem 1.3rem;font-size:.9rem}
-.btn-danger:hover{box-shadow:0 4px 18px rgba(239,35,60,.4)}
-.btn-icon{background:transparent;border:1px solid var(--border);color:var(--muted);width:32px;height:32px;border-radius:6px;padding:0;font-size:.85rem}
-.btn-icon:hover{border-color:var(--gold);color:var(--gold)}
-
-/* ── Inputs ── */
-.input{background:var(--deep);border:1px solid var(--border);color:var(--text);padding:.65rem .9rem;border-radius:7px;width:100%;font-size:.9rem;outline:none;font-family:'Barlow',sans-serif;transition:border-color .2s}
-.input:focus{border-color:var(--gold)}
-.input::placeholder{color:var(--dim)}
-.label{display:block;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.35rem}
-.field{margin-bottom:1rem}
-select.input{cursor:pointer}
-
-/* ── Cards ── */
-.card{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:1.25rem}
-.card-raised{background:var(--raised);border:1px solid var(--border2);border-radius:11px}
-
-/* ── Badges ── */
-.badge{display:inline-flex;align-items:center;padding:.18rem .55rem;border-radius:999px;font-size:.65rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
-.badge-gold{background:rgba(245,166,35,.18);color:var(--gold);border:1px solid rgba(245,166,35,.3)}
-.badge-green{background:rgba(6,214,160,.15);color:var(--green);border:1px solid rgba(6,214,160,.3)}
-.badge-red{background:rgba(239,35,60,.15);color:var(--red);border:1px solid rgba(239,35,60,.3)}
-.badge-blue{background:rgba(17,138,178,.2);color:#4fc3f7;border:1px solid rgba(17,138,178,.35)}
-.badge-gray{background:rgba(136,136,153,.15);color:var(--muted);border:1px solid rgba(136,136,153,.25)}
-
-/* ── Page containers ── */
-.page-wrap{max-width:1280px;margin:0 auto;padding:1.75rem 1.25rem;flex:1}
-.page-wrap.narrow{max-width:680px}
-.page-title{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.06em;margin-bottom:.25rem}
-.page-sub{color:var(--muted);font-size:.9rem;margin-bottom:1.75rem}
-
-/* ── Grid ── */
-.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
-.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
-.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
-@media(max-width:700px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
-
-/* ─────────────── AUTH SCREEN ─────────────── */
-#screen-auth{
-  background:radial-gradient(ellipse at 60% 0%,rgba(245,166,35,.07) 0%,transparent 55%),
-             radial-gradient(ellipse at 0% 100%,rgba(17,138,178,.05) 0%,transparent 50%),var(--void);
-  align-items:center;justify-content:center;padding:2rem 1rem;
-}
-.auth-box{width:100%;max-width:420px}
-.auth-logo{text-align:center;margin-bottom:2rem}
-.auth-logo .logo-icon{width:52px;height:52px;font-size:1.5rem;margin:0 auto 10px}
-.auth-logo .logo-name{font-size:1.6rem}
-.auth-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:2rem}
-.auth-tabs{display:flex;background:var(--deep);border-radius:8px;padding:3px;margin-bottom:1.5rem;gap:3px}
-.auth-tab{flex:1;padding:.45rem;text-align:center;border-radius:6px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);transition:all .2s}
-.auth-tab.active{background:var(--card);color:var(--gold);border:1px solid var(--border2)}
-.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1rem}
-.role-card{border:1px solid var(--border);border-radius:8px;padding:.75rem;text-align:center;cursor:pointer;transition:all .2s}
-.role-card:hover,.role-card.selected{border-color:var(--gold);background:rgba(245,166,35,.07)}
-.role-card .emoji{font-size:1.5rem;display:block;margin-bottom:.3rem}
-.role-card .name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.06em}
-.role-card.selected .name{color:var(--gold)}
-.demo-hint{background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.15);border-radius:8px;padding:.7rem 1rem;margin-top:1rem;font-size:.78rem;color:var(--muted);text-align:center}
-.demo-hint strong{color:var(--gold)}
-
-/* ─────────────── DASHBOARD ─────────────── */
-.stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;margin-bottom:2rem}
-@media(max-width:600px){.stat-strip{grid-template-columns:repeat(2,1fr)}}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem;text-align:center}
-.stat-val{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--gold)}
-.stat-lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-top:.15rem}
-.room-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
-.room-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.1rem;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
-.room-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),transparent)}
-.room-card:hover{border-color:rgba(245,166,35,.35);transform:translateY(-2px)}
-.room-sport-icon{font-size:2rem;margin-bottom:.6rem}
-.room-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:.25rem}
-.room-meta{font-size:.78rem;color:var(--muted);display:flex;gap:1rem;margin-bottom:.85rem}
-.room-code{font-family:'Barlow Condensed',sans-serif;font-weight:600;color:var(--gold);font-size:.85rem;letter-spacing:.06em}
-.room-actions{display:flex;gap:.5rem}
-.empty-state{text-align:center;padding:4rem 2rem}
-.empty-icon{font-size:3.5rem;display:block;margin-bottom:1rem}
-.empty-text{color:var(--muted);margin-bottom:1.5rem}
-
-/* ─────────────── CREATE ROOM ─────────────── */
-.sport-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem;margin-bottom:1.25rem}
-.sport-opt{border:1px solid var(--border);border-radius:10px;padding:1rem;cursor:pointer;transition:all .2s;text-align:center}
-.sport-opt:hover,.sport-opt.selected{border-color:var(--gold);background:rgba(245,166,35,.07)}
-.sport-opt .sport-emoji{font-size:2rem;display:block;margin-bottom:.4rem}
-.sport-opt .sport-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.95rem;text-transform:uppercase}
-.sport-opt.selected .sport-name{color:var(--gold)}
-.step-indicator{display:flex;align-items:center;gap:.5rem;margin-bottom:1.75rem}
-.step-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;transition:all .3s;flex-shrink:0}
-.step-dot.done,.step-dot.active{background:var(--gold);color:#000}
-.step-dot.pending{background:var(--raised);color:var(--dim);border:1px solid var(--border2)}
-.step-line{flex:1;height:2px;background:var(--border);border-radius:1px}
-.step-line.done{background:var(--gold)}
-.slider-wrap{padding:.5rem 0}
-.slider{width:100%;accent-color:var(--gold)}
-.slider-label{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);margin-top:.3rem}
-
-/* ─────────────── LOBBY ─────────────── */
-.room-header{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.2rem 1.5rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
-.room-header-left{display:flex;align-items:center;gap:.85rem}
-.room-sport-badge{font-size:2.2rem}
-.room-title-big{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.05em}
-.lobby-tabs{display:flex;gap:2px;background:var(--deep);padding:3px;border-radius:9px;margin-bottom:1.25rem;width:fit-content}
-.lobby-tab{padding:.42rem 1.1rem;border-radius:7px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);transition:all .2s}
-.lobby-tab.active{background:var(--card);color:var(--gold);border:1px solid var(--border)}
-.player-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.9rem;position:relative;overflow:hidden;transition:border-color .2s}
-.player-card:hover{border-color:var(--border2)}
-.player-cat-stripe{position:absolute;top:0;left:0;right:0;height:2px}
-.player-avatar{width:52px;height:52px;border-radius:9px;object-fit:cover;flex-shrink:0}
-.player-avatar-placeholder{width:52px;height:52px;border-radius:9px;background:var(--raised);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0}
-.player-info{flex:1;min-width:0}
-.player-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.player-meta{font-size:.75rem;color:var(--muted);margin-top:.15rem}
-.rating-bar{height:5px;border-radius:3px;background:var(--border);overflow:hidden;margin-top:.5rem}
-.rating-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#06D6A0,#F5A623,#EF233C);transition:width .5s ease}
-.team-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem}
-.team-logo{width:44px;height:44px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:#fff;flex-shrink:0}
-.add-form{background:var(--card);border:1px solid rgba(245,166,35,.2);border-radius:12px;padding:1.5rem;margin-bottom:1.25rem}
-.add-form-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.1rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1.25rem;color:var(--gold)}
-
-/* ─────────────── AUCTION STAGE ─────────────── */
-.auction-layout{display:grid;grid-template-columns:260px 1fr 260px;gap:1.25rem;flex:1;padding:1rem 1.25rem;max-width:1400px;margin:0 auto;width:100%}
-@media(max-width:1100px){.auction-layout{grid-template-columns:1fr;padding:.75rem}}
-.auction-panel{display:flex;flex-direction:column;gap:.85rem;overflow:auto;max-height:calc(100vh - 100px)}
-@media(max-width:1100px){.auction-panel{max-height:none}}
-
-/* Player Stage */
-.stage-card{background:var(--card);border:1px solid rgba(245,166,35,.25);border-radius:14px;overflow:hidden;position:relative}
-.stage-header-bar{height:3px;background:linear-gradient(90deg,#F5A623,#EF233C,#118AB2)}
-.stage-content{padding:1.25rem}
-.player-stage-img{width:100px;height:100px;border-radius:12px;object-fit:cover;border:2px solid rgba(245,166,35,.3);flex-shrink:0}
-.player-stage-placeholder{width:100px;height:100px;border-radius:12px;background:var(--raised);display:flex;align-items:center;justify-content:center;font-size:3rem;flex-shrink:0;border:2px solid var(--border)}
-.player-stage-name{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:.04em;line-height:1}
-.player-stage-sub{font-size:.82rem;color:var(--muted);margin-top:.3rem}
-
-/* Timer Ring */
-.timer-wrap{position:relative;width:90px;height:90px;flex-shrink:0}
-.timer-wrap svg{transform:rotate(-90deg);transform-origin:50% 50%}
-.timer-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.timer-num{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;line-height:1}
-.timer-sub{font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
-
-/* Bid section */
-.current-bid-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
-.current-bid-amount{font-family:'Bebas Neue',sans-serif;font-size:2.4rem;color:var(--gold);line-height:1;transition:all .2s}
-.bid-by{font-size:.78rem;color:var(--muted);margin-top:.15rem}
-.bid-input-row{display:flex;gap:.5rem;margin-top:.85rem}
-.bid-input{background:var(--deep);border:1px solid var(--border2);color:var(--text);padding:.6rem 1rem;border-radius:8px;font-size:1rem;outline:none;flex:1;font-family:'Barlow',sans-serif;transition:border-color .2s}
-.bid-input:focus{border-color:var(--gold)}
-.quick-bids{display:flex;gap:.4rem;margin-top:.5rem;flex-wrap:wrap}
-.quick-bid{border:1px solid var(--border);background:transparent;color:var(--muted);padding:.3rem .6rem;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:.8rem;cursor:pointer;transition:all .18s}
-.quick-bid:hover{border-color:var(--gold);color:var(--gold)}
-.result-banner{border-radius:10px;padding:1rem;text-align:center;margin-top:.85rem}
-.result-banner.sold{background:rgba(6,214,160,.1);border:1px solid rgba(6,214,160,.3)}
-.result-banner.unsold{background:rgba(239,35,60,.08);border:1px solid rgba(239,35,60,.25)}
-.result-banner-title{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:.06em}
-
-/* Bid history */
-.bid-item{display:flex;align-items:center;gap:.6rem;padding:.5rem .6rem;border-radius:7px;font-size:.82rem}
-.bid-item.top{background:rgba(245,166,35,.08);animation:flash .6s ease}
-@keyframes flash{from{background:rgba(245,166,35,.3)} to{background:rgba(245,166,35,.08)}}
-.bid-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-
-/* Budget bar */
-.budget-team{border:1px solid var(--border);border-radius:9px;padding:.75rem;transition:all .3s}
-.budget-team.leading{border-color:rgba(245,166,35,.5);background:rgba(245,166,35,.05)}
-.budget-bar-track{height:5px;border-radius:3px;background:var(--border);overflow:hidden;margin-top:.5rem}
-.budget-bar-fill{height:100%;border-radius:3px;transition:width .6s ease}
-
-/* Admin controls */
-.admin-controls{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:.9rem}
-.admin-ctrl-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.75rem}
-.ctrl-buttons{display:flex;gap:.5rem;flex-wrap:wrap}
-
-/* Sold/unsold mini list */
-.mini-list{font-size:.78rem}
-.mini-item{display:flex;align-items:center;gap:.5rem;padding:.35rem 0;border-bottom:1px solid var(--border)}
-.mini-item:last-child{border-bottom:none}
-
-/* Waiting state */
-.waiting-stage{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem;text-align:center;flex:1}
-.waiting-icon{font-size:3.5rem;margin-bottom:1rem;animation:float 3s ease-in-out infinite}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-.pulse-ring{animation:pulse-ring 2.5s ease-in-out infinite}
-@keyframes pulse-ring{0%,100%{box-shadow:0 0 0 0 rgba(245,166,35,.4)}50%{box-shadow:0 0 0 12px rgba(245,166,35,0)}}
-
-/* Complete screen */
-.complete-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem;text-align:center;flex:1}
-
-/* ─────────────── ANALYTICS ─────────────── */
-.analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem}
-@media(max-width:700px){.analytics-grid{grid-template-columns:1fr}}
-.chart-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.25rem}
-.chart-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.9rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:1rem}
-.top-player-row{display:flex;align-items:center;gap:.75rem;padding:.6rem;border-radius:8px;transition:background .2s}
-.top-player-row:hover{background:var(--raised)}
-.top-player-rank{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--dim);width:24px;flex-shrink:0}
-.top-player-rank.gold{color:var(--gold)}
-.top-player-info{flex:1;min-width:0}
-.top-player-name{font-weight:600;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.top-player-team{font-size:.75rem;color:var(--muted)}
-
-/* ─────────────── JOIN ROOM ─────────────── */
-.join-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:2rem}
-.join-card{width:100%;max-width:440px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:2rem}
-.code-input{font-family:'Bebas Neue',sans-serif;font-size:2rem;text-align:center;letter-spacing:.3em;text-transform:uppercase;background:var(--deep);border:2px solid var(--border);color:var(--gold);padding:.75rem 1rem;border-radius:10px;width:100%;outline:none;transition:border-color .2s}
-.code-input:focus{border-color:var(--gold)}
-.room-preview{background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.2);border-radius:10px;padding:1rem;margin:1rem 0}
-
-/* ─────────────── TOAST ─────────────── */
-#toast-container{position:fixed;top:70px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:.5rem;pointer-events:none}
-.toast{background:var(--card);border:1px solid var(--border2);border-radius:9px;padding:.75rem 1.1rem;font-size:.85rem;max-width:320px;display:flex;align-items:center;gap:.6rem;animation:slideIn .3s ease;box-shadow:0 8px 30px rgba(0,0,0,.5)}
-@keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
-.toast.success{border-left:3px solid var(--green)}
-.toast.error{border-left:3px solid var(--red)}
-.toast.info{border-left:3px solid var(--gold)}
-
-/* ─────────────── MODAL ─────────────── */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;padding:1rem}
-.modal-overlay.open{display:flex}
-.modal-box{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:1.75rem;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
-.modal-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.25rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1.25rem}
-.modal-close{float:right;background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:1.2rem;line-height:1;margin-top:-.2rem}
-.modal-close:hover{color:var(--red)}
-
-/* ─────────────── STATS GRID ─────────────── */
-.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-top:.75rem}
-.stat-item{background:var(--raised);border-radius:7px;padding:.5rem .6rem;text-align:center}
-.stat-item-val{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.95rem;color:var(--text)}
-.stat-item-key{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:.1rem}
-
-/* AI chip */
-.ai-chip{display:inline-flex;align-items:center;gap:.3rem;background:rgba(6,214,160,.1);border:1px solid rgba(6,214,160,.25);border-radius:999px;padding:.2rem .6rem;font-size:.72rem;color:var(--green);font-weight:600}
-
-/* Misc helpers */
-.flex{display:flex}.items-center{align-items:center}.justify-between{justify-content:space-between}.gap-1{gap:.4rem}.gap-2{gap:.75rem}.gap-3{gap:1rem}.mt-1{margin-top:.4rem}.mt-2{margin-top:.85rem}.mt-3{margin-top:1.25rem}.mb-1{margin-bottom:.4rem}.mb-2{margin-bottom:.85rem}.text-muted{color:var(--muted)}.text-sm{font-size:.82rem}.text-gold{color:var(--gold)}.text-green{color:var(--green)}.text-red{color:var(--red)}.font-bold{font-weight:700}.w-full{width:100%}.overflow-hidden{overflow:hidden}.truncate{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 </style>
 </head>
 <body>
-<div id="app">
 
-<!-- ═══════════════════════════════════════════
-     AUTH SCREEN
-═══════════════════════════════════════════ -->
-<div id="screen-auth" class="screen active">
-  <div class="auth-box">
-    <div class="auth-logo">
-      <div class="logo-icon">P</div>
-      <div class="logo-name">ProBid Arena</div>
-      <div class="logo-sub" style="text-align:center;margin-top:.25rem;letter-spacing:.25em;font-size:.65rem;color:var(--gold)">Real-Time Sports Auction</div>
+<div class="bg-animated">
+  <div class="grid-bg"></div>
+  <div class="scanline"></div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ============================================================
+     LOGIN SCREEN
+     ============================================================ -->
+<div id="loginScreen" class="screen">
+  <div class="logo-wrap">
+    <span class="logo-icon">🏆</span>
+    <h1 class="logo-title">PROBID ARENA</h1>
+    <p class="logo-sub">Real-Time Sports Auction Platform</p>
+  </div>
+  <div class="auth-card">
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="tab-btn" onclick="switchAuthTab('register')">Register</button>
     </div>
-    <div class="auth-card">
-      <div class="auth-tabs">
-        <div class="auth-tab active" onclick="switchAuthTab('login')">Sign In</div>
-        <div class="auth-tab" onclick="switchAuthTab('register')">Create Account</div>
-      </div>
 
-      <!-- Login -->
-      <div id="auth-login">
-        <div class="field"><label class="label">Email</label><input class="input" id="login-email" type="email" placeholder="you@example.com" value="admin@demo.com"></div>
-        <div class="field"><label class="label">Password</label><input class="input" id="login-pass" type="password" placeholder="••••••••" value="demo123"></div>
-        <button class="btn btn-gold w-full" onclick="doLogin()" style="width:100%;justify-content:center;padding:.7rem">Sign In</button>
-        <div class="demo-hint">
-          <strong>Admin demo:</strong> admin@demo.com / demo123<br>
-          <strong>Bidder demo:</strong> bidder@demo.com / demo123
-        </div>
+    <!-- Login Form -->
+    <div id="loginForm">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="loginUser" placeholder="Enter your username" autocomplete="off">
       </div>
-
-      <!-- Register -->
-      <div id="auth-register" style="display:none">
-        <div class="field"><label class="label">Username</label><input class="input" id="reg-name" placeholder="YourName"></div>
-        <div class="field"><label class="label">Email</label><input class="input" id="reg-email" type="email" placeholder="you@example.com"></div>
-        <div class="field"><label class="label">Password</label><input class="input" id="reg-pass" type="password" placeholder="••••••••"></div>
-        <div class="field">
-          <label class="label">Account Type</label>
-          <div class="role-grid">
-            <div class="role-card selected" id="role-bidder" onclick="selectRole('bidder')">
-              <span class="emoji">🎯</span><span class="name">Bidder</span>
-            </div>
-            <div class="role-card" id="role-admin" onclick="selectRole('admin')">
-              <span class="emoji">👑</span><span class="name">Admin</span>
-            </div>
-          </div>
-        </div>
-        <button class="btn btn-gold" style="width:100%;justify-content:center;padding:.7rem" onclick="doRegister()">Create Account</button>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="Enter password">
       </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="loginRole">
+          <option value="admin">🛡️ Admin (Auction Manager)</option>
+          <option value="bidder">💰 Bidder</option>
+        </select>
+      </div>
+      <button class="btn btn-gold fw-btn" onclick="handleLogin()">Enter Arena →</button>
     </div>
+
+    <!-- Register Form -->
+    <div id="registerForm" class="hidden">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="regName" placeholder="Your name">
+      </div>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="regUser" placeholder="Choose a username" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="regPass" placeholder="Create password">
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="regRole">
+          <option value="admin">🛡️ Admin (Auction Manager)</option>
+          <option value="bidder">💰 Bidder</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Team Name (for Bidders)</label>
+        <input type="text" id="regTeam" placeholder="e.g. Mumbai Tigers">
+      </div>
+      <div class="form-group">
+        <label>Team Budget (₹ Crores)</label>
+        <input type="number" id="regBudget" value="100" min="10" max="1000">
+      </div>
+      <div class="form-group">
+        <label>Team Emoji</label>
+        <input type="text" id="regEmoji" placeholder="🐯" maxlength="2">
+      </div>
+      <button class="btn btn-gold fw-btn" onclick="handleRegister()">Join Arena →</button>
+    </div>
+
+    <p style="text-align:center;margin-top:20px;font-size:12px;color:var(--muted)">
+      Demo: user=<strong>admin1</strong> pass=<strong>pass</strong> (Admin) &nbsp;|&nbsp; user=<strong>bidder1</strong> pass=<strong>pass</strong> (Bidder)
+    </p>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════
-     NAV (shared)
-═══════════════════════════════════════════ -->
-<nav id="main-nav" style="display:none">
-  <div class="logo" onclick="goTo('dashboard')">
-    <div class="logo-icon">P</div>
-    <div class="logo-text">
-      <div class="logo-name">ProBid</div>
-      <div class="logo-sub">Arena</div>
+<!-- ============================================================
+     LOBBY SCREEN
+     ============================================================ -->
+<div id="lobbyScreen" class="screen hidden">
+  <div class="topbar">
+    <span class="topbar-logo">🏆 PROBID ARENA</span>
+    <div class="topbar-user">
+      <span id="userBadge" class="badge badge-admin">Admin</span>
+      <div class="avatar" id="userAvatar" style="background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000">A</div>
+      <span id="userName" style="font-weight:600"></span>
+      <button class="btn btn-outline btn-sm" onclick="logout()">Exit</button>
     </div>
   </div>
-  <div class="nav-right">
-    <div id="nav-actions"></div>
-    <div class="nav-user">
-      <div id="nav-avatar" class="avatar" style="background:#6366f1">A</div>
-      <div style="line-height:1.1">
-        <div id="nav-username" style="font-weight:600;font-size:.85rem"></div>
-        <div id="nav-role" style="font-size:.68rem;color:var(--muted)"></div>
-      </div>
-      <button class="btn btn-outline btn-sm" style="margin-left:.5rem" onclick="doLogout()">Out</button>
-    </div>
-  </div>
-</nav>
 
-<!-- ═══════════════════════════════════════════
-     DASHBOARD
-═══════════════════════════════════════════ -->
-<div id="screen-dashboard" class="screen">
-  <div class="page-wrap">
-    <div style="margin-bottom:1.5rem">
-      <h1 class="page-title" id="dash-greeting">Welcome back</h1>
-      <p class="page-sub" id="dash-sub">Manage your auctions</p>
+  <div class="screen-tabs">
+    <button class="screen-tab active" onclick="switchLobbyTab('rooms')">🏟 Auction Rooms</button>
+    <button class="screen-tab" onclick="switchLobbyTab('analytics')">📊 Analytics</button>
+  </div>
+
+  <div id="lobbyRooms">
+    <!-- Admin controls -->
+    <div id="adminLobbyControls" class="hidden" style="margin-bottom:20px;display:flex;gap:12px;flex-wrap:wrap">
+      <button class="btn btn-gold" onclick="openModal('createRoomModal')">+ Create Room</button>
+      <button class="btn btn-outline" onclick="openModal('addPlayerModal')">+ Add Player</button>
     </div>
-    <div class="stat-strip" id="dash-stats"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-      <h2 class="font-cond" style="font-weight:700;font-size:1.1rem;text-transform:uppercase;letter-spacing:.07em">Your Rooms</h2>
-      <div id="dash-actions"></div>
+
+    <h2 class="raj" style="font-size:13px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:16px">Live Auction Rooms</h2>
+    <div class="room-grid" id="roomGrid">
+      <!-- rooms rendered here -->
     </div>
-    <div id="dash-rooms"></div>
+    <div class="waiting" id="noRoomsMsg" style="display:none">
+      <div class="waiting-icon">🏟</div>
+      <div class="waiting-text">No Rooms Yet</div>
+      <p class="muted">Ask an Admin to create an auction room</p>
+    </div>
+
+    <!-- Join by code -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;margin-top:20px;max-width:400px">
+      <h3 class="raj" style="font-size:14px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Join by Room Code</h3>
+      <div style="display:flex;gap:10px">
+        <input type="text" id="joinCode" placeholder="Enter room code..." style="text-transform:uppercase;letter-spacing:3px;font-family:'Orbitron',monospace">
+        <button class="btn btn-gold" onclick="joinByCode()">Join</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="lobbyAnalytics" style="display:none">
+    <div class="summary-row" id="globalSummary"></div>
+    <div class="analytics-grid" id="globalCharts"></div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════
-     CREATE ROOM
-═══════════════════════════════════════════ -->
-<div id="screen-create-room" class="screen">
-  <div class="page-wrap narrow">
-    <h1 class="page-title">Create Auction Room</h1>
-    <p class="page-sub">Set up your professional sports auction</p>
-    <div class="step-indicator" id="create-steps">
-      <div class="step-dot active" id="step1-dot">1</div>
-      <div class="step-line" id="step-line-1"></div>
-      <div class="step-dot pending" id="step2-dot">2</div>
-    </div>
-    <!-- Step 1 -->
-    <div id="create-step1">
-      <div class="card" style="margin-bottom:1rem">
-        <div class="field"><label class="label">Room Name *</label><input class="input" id="cr-name" placeholder="e.g. IPL Mega Auction 2025"></div>
-        <label class="label" style="margin-bottom:.6rem">Select Sport *</label>
-        <div class="sport-grid">
-          <div class="sport-opt selected" data-sport="cricket" onclick="selectSport(this)"><span class="sport-emoji">🏏</span><span class="sport-name">Cricket</span></div>
-          <div class="sport-opt" data-sport="football" onclick="selectSport(this)"><span class="sport-emoji">⚽</span><span class="sport-name">Football</span></div>
-          <div class="sport-opt" data-sport="basketball" onclick="selectSport(this)"><span class="sport-emoji">🏀</span><span class="sport-name">Basketball</span></div>
-          <div class="sport-opt" data-sport="custom" onclick="selectSport(this)"><span class="sport-emoji">🏆</span><span class="sport-name">Custom</span></div>
-        </div>
-        <div id="custom-sport-wrap" style="display:none;margin-top:.75rem">
-          <div class="field"><label class="label">Custom Sport Name</label><input class="input" id="cr-custom-sport" placeholder="e.g. Kabaddi"></div>
-        </div>
-      </div>
-      <button class="btn btn-gold" style="width:100%;justify-content:center;padding:.7rem" onclick="createStep2()">Next: Settings →</button>
-    </div>
-    <!-- Step 2 -->
-    <div id="create-step2" style="display:none">
-      <div class="card" style="margin-bottom:1rem">
-        <div class="field">
-          <label class="label">Bid Timer Duration</label>
-          <div class="slider-wrap">
-            <input type="range" class="slider" id="cr-timer" min="10" max="120" step="5" value="30" oninput="document.getElementById('cr-timer-val').textContent=this.value+'s'">
-            <div class="slider-label"><span>10s</span><span id="cr-timer-val">30s</span><span>120s</span></div>
-          </div>
-        </div>
-        <div class="field">
-          <label class="label">Maximum Teams</label>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
-            <div class="sport-opt selected" data-teams="2" onclick="selectTeams(this)" style="padding:.65rem;text-align:center"><span class="sport-name">2 Teams</span></div>
-            <div class="sport-opt" data-teams="3" onclick="selectTeams(this)" style="padding:.65rem;text-align:center"><span class="sport-name">3 Teams</span></div>
-          </div>
-        </div>
-        <div class="card" style="background:rgba(245,166,35,.05);border-color:rgba(245,166,35,.2);padding:.9rem">
-          <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:.6rem;font-weight:600">Summary</div>
-          <div id="room-summary" style="font-size:.85rem;display:flex;flex-direction:column;gap:.3rem"></div>
-        </div>
-      </div>
-      <div style="display:flex;gap:.6rem">
-        <button class="btn btn-outline" style="flex:1;justify-content:center" onclick="createStep1()">← Back</button>
-        <button class="btn btn-gold" style="flex:1.5;justify-content:center;padding:.7rem" onclick="doCreateRoom()">🏟 Create Room</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════
-     JOIN ROOM
-═══════════════════════════════════════════ -->
-<div id="screen-join" class="screen">
-  <div class="page-wrap">
-    <h1 class="page-title">Join Auction Room</h1>
-    <p class="page-sub">Click any room below to enter, or ask your admin to share a room</p>
-    <div id="join-all-rooms"></div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════
-     LOBBY
-═══════════════════════════════════════════ -->
-<div id="screen-lobby" class="screen">
-  <div class="page-wrap">
-    <div class="room-header">
-      <div class="room-header-left">
-        <div class="room-sport-badge" id="lobby-sport-icon"></div>
-        <div>
-          <h1 class="room-title-big" id="lobby-room-name"></h1>
-          <div style="display:flex;align-items:center;gap:1rem;margin-top:.2rem">
-            <span id="lobby-status-badge" class="badge badge-blue">Waiting</span>
-            <span class="text-sm text-muted">Code: <button class="font-cond" style="background:none;border:none;color:var(--gold);font-weight:700;font-size:.88rem;letter-spacing:.06em;cursor:pointer" onclick="copyCode()" id="lobby-code">XXXX99</button></span>
-          </div>
-        </div>
-      </div>
-      <div id="lobby-actions" style="display:flex;gap:.5rem"></div>
-    </div>
-    <div class="lobby-tabs">
-      <div class="lobby-tab active" onclick="lobbyTab('players')">⚡ Players (<span id="lobby-player-count">0</span>)</div>
-      <div class="lobby-tab" onclick="lobbyTab('teams')">🏆 Teams (<span id="lobby-team-count">0</span>)</div>
-    </div>
-    <div id="lobby-players-tab">
-      <div id="lobby-add-player-wrap"></div>
-      <div id="lobby-players-grid" class="room-grid"></div>
-    </div>
-    <div id="lobby-teams-tab" style="display:none">
-      <div id="lobby-add-team-wrap"></div>
-      <div id="lobby-teams-grid" class="room-grid"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════
-     AUCTION ROOM (Live Stage)
-═══════════════════════════════════════════ -->
-<div id="screen-auction" class="screen">
+<!-- ============================================================
+     AUCTION ROOM SCREEN
+     ============================================================ -->
+<div id="auctionScreen" class="screen">
   <div class="auction-layout">
-    <!-- LEFT: Teams & Budgets -->
-    <div class="auction-panel" id="auction-left">
-      <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:600">Teams & Budgets</div>
-      <div id="auction-budgets"></div>
-      <div class="card" style="padding:.9rem">
-        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.6rem">Progress</div>
-        <div class="mini-list" id="auction-progress"></div>
-      </div>
-      <div class="card" style="padding:.9rem" id="auction-sold-panel">
-        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.6rem">Recent Sales</div>
-        <div class="mini-list" id="auction-sold-list"><div class="text-muted text-sm" style="padding:.5rem 0">None yet</div></div>
-      </div>
+
+    <!-- LEFT SIDEBAR: Teams -->
+    <div class="sidebar">
+      <div class="sidebar-header">Teams & Budgets</div>
+      <div class="sidebar-body" id="teamsPanel"></div>
     </div>
 
     <!-- CENTER: Stage -->
-    <div style="display:flex;flex-direction:column;gap:.85rem">
-      <!-- Connection bar -->
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem">
-        <div style="display:flex;align-items:center;gap:.5rem;font-size:.78rem;color:var(--muted)">
-          <div class="connection-dot"></div> Live · <span id="auction-room-label" style="color:var(--text)"></span>
-        </div>
-        <div id="auction-status-badge"></div>
-      </div>
+    <div class="stage">
+      <div class="stage-inner">
 
-      <!-- Player Stage -->
-      <div id="auction-stage">
-        <div class="waiting-stage">
-          <div class="waiting-icon">⏳</div>
-          <h2 class="font-cond" style="font-weight:700;font-size:1.3rem;text-transform:uppercase;margin-bottom:.5rem">Waiting for Auction</h2>
-          <p class="text-muted text-sm" id="waiting-msg">Admin will start the auction shortly</p>
+        <!-- Top bar -->
+        <div class="auction-topbar">
+          <div style="display:flex;align-items:center;gap:12px">
+            <button class="btn btn-outline btn-sm" onclick="leaveRoom()">← Leave</button>
+            <div>
+              <div style="font-size:11px;color:var(--muted);letter-spacing:2px;font-family:'Rajdhani',sans-serif">ROOM</div>
+              <div class="room-code-badge" id="roomCodeDisplay">---</div>
+            </div>
+          </div>
+          <div id="roomNameDisplay" style="font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;letter-spacing:2px"></div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div id="onlineIndicator" style="display:flex;align-items:center;gap:6px;font-size:13px">
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;box-shadow:0 0 8px var(--green)"></span>
+              <span id="onlineCount">1 online</span>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="showAnalytics()">📊 Analytics</button>
+          </div>
         </div>
-      </div>
 
-      <!-- Admin Controls -->
-      <div id="admin-controls-wrap"></div>
+        <!-- Admin controls -->
+        <div id="adminControls" class="admin-controls hidden">
+          <div class="admin-title">🛡 Admin Controls</div>
+          <div class="control-row">
+            <button class="btn btn-green btn-sm" id="startAuctionBtn" onclick="startAuction()">▶ Start Auction</button>
+            <button class="btn btn-outline btn-sm" id="nextPlayerBtn" onclick="nextPlayer()" style="display:none">⏭ Next Player</button>
+            <button class="btn btn-red btn-sm" id="resetAuctionBtn" onclick="resetAuction()">↺ Reset</button>
+            <button class="btn btn-outline btn-sm" onclick="openModal('addPlayerModal')">+ Add Player</button>
+          </div>
+        </div>
+
+        <!-- AI Suggest -->
+        <div class="ai-suggest hidden" id="aiSuggest">
+          <div class="ai-icon">🤖</div>
+          <div class="ai-text">
+            <div class="ai-label">AI Price Prediction</div>
+            <div class="ai-value" id="aiPrice">₹0 Cr</div>
+            <div class="ai-note" id="aiNote"></div>
+          </div>
+        </div>
+
+        <!-- Player Stage -->
+        <div id="waitingStage" class="player-stage" style="text-align:center;padding:60px">
+          <div style="font-size:64px;margin-bottom:24px">⏳</div>
+          <div style="font-size:24px;font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:2px;margin-bottom:8px">Waiting for Auction to Start</div>
+          <p class="muted">Admin will begin the auction shortly</p>
+        </div>
+
+        <div id="activeStage" style="display:none">
+          <div class="player-stage">
+            <div class="ps-top">
+              <div class="player-avatar-big" id="playerEmoji">
+                <span style="font-size:48px">⚽</span>
+                <div class="player-pos-badge" id="playerPos">Midfielder</div>
+              </div>
+              <div class="player-info">
+                <div class="player-name-big" id="playerName">Player Name</div>
+                <div class="player-meta-row" id="playerMeta"></div>
+                <div class="rating-ring">
+                  <div class="rating-num gold" id="playerRating">85</div>
+                  <div class="rating-stars" id="playerStars">⭐⭐⭐⭐</div>
+                  <span class="muted" style="font-size:12px">/100</span>
+                </div>
+              </div>
+            </div>
+            <div class="stats-grid" id="playerStats"></div>
+          </div>
+
+          <!-- Bid Section -->
+          <div class="bid-section">
+            <div class="current-bid-display">
+              <div class="bid-label">Current Highest Bid</div>
+              <div class="bid-amount" id="currentBidAmount">₹0 Cr</div>
+              <div class="bid-by">Leading: <span id="currentBidder">—</span></div>
+            </div>
+
+            <div class="timer-wrap">
+              <div class="timer-circle safe" id="timerCircle">
+                <span class="timer-num" id="timerNum">30</span>
+              </div>
+              <div>
+                <div style="font-size:13px;color:var(--muted)">Base Price</div>
+                <div style="font-size:20px;font-weight:700;font-family:'Rajdhani',sans-serif" id="basePrice">₹5 Cr</div>
+              </div>
+            </div>
+
+            <div class="bid-input-row" id="bidInputSection">
+              <input type="number" id="bidAmount" placeholder="Enter bid (₹ Crores)..." step="0.5" min="0">
+              <button class="btn btn-gold" id="placeBidBtn" onclick="placeBid()">BID NOW</button>
+            </div>
+            <div class="quick-bids" id="quickBids">
+              <button class="quick-bid-btn" onclick="quickBid(0.5)">+₹0.5</button>
+              <button class="quick-bid-btn" onclick="quickBid(1)">+₹1</button>
+              <button class="quick-bid-btn" onclick="quickBid(2)">+₹2</button>
+              <button class="quick-bid-btn" onclick="quickBid(5)">+₹5</button>
+              <button class="quick-bid-btn" onclick="quickBid(10)">+₹10</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Auction Over -->
+        <div id="auctionOverStage" style="display:none" class="player-stage" style="text-align:center;padding:60px">
+          <div style="font-size:64px;margin-bottom:24px">🏆</div>
+          <div style="font-size:28px;font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:2px;margin-bottom:16px">Auction Complete!</div>
+          <button class="btn btn-gold" onclick="showAnalytics()">View Full Analytics →</button>
+        </div>
+
+      </div>
     </div>
 
-    <!-- RIGHT: Bid History + Stats -->
-    <div class="auction-panel" id="auction-right">
-      <div id="auction-stats-panel"></div>
-      <div class="card" style="padding:.9rem">
-        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.6rem">Live Bids</div>
-        <div id="auction-bid-history"><div class="text-muted text-sm" style="padding:.5rem 0;text-align:center">No bids yet</div></div>
-      </div>
+    <!-- RIGHT SIDEBAR: Players & Bid History -->
+    <div class="sidebar sidebar-right">
+      <div class="sidebar-header">Players</div>
+      <div id="playerListSidebar" style="height:45%;overflow-y:auto;padding:12px;border-bottom:1px solid rgba(255,255,255,.05)"></div>
+      <div class="sidebar-header">Live Bid History</div>
+      <div class="sidebar-body" id="bidHistory"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================
+     ANALYTICS OVERLAY
+     ============================================================ -->
+<div id="analyticsOverlay" class="hidden">
+  <div style="position:fixed;inset:0;background:var(--bg0);z-index:500;overflow-y:auto;padding:20px">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
+      <button class="btn btn-outline btn-sm" onclick="hideAnalytics()">← Back</button>
+      <h2 class="orb" style="font-size:20px;letter-spacing:3px">ANALYTICS</h2>
+      <button class="btn btn-gold btn-sm" onclick="downloadPDF()" style="margin-left:auto">⬇ Download PDF</button>
+    </div>
+    <div class="summary-row" id="analyticsSummary"></div>
+    <div class="analytics-grid" id="analyticsCharts"></div>
+
+    <!-- Sold Players Table -->
+    <div class="chart-card" style="margin-top:20px">
+      <div class="chart-title">Sold Players</div>
+      <div id="soldPlayersTable" style="overflow-x:auto"></div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════
-     ANALYTICS
-═══════════════════════════════════════════ -->
-<div id="screen-analytics" class="screen">
-  <div class="page-wrap">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;flex-wrap:wrap;gap:.75rem">
-      <div>
-        <h1 class="page-title">Analytics Dashboard</h1>
-        <p class="page-sub" id="analytics-sub" style="margin-bottom:0"></p>
-      </div>
-      <button class="btn btn-outline" onclick="exportPDF()">📄 Export PDF</button>
-    </div>
-    <div class="stat-strip" id="analytics-stats"></div>
-    <div class="analytics-grid">
-      <div class="chart-card"><div class="chart-title">Team Spending</div><canvas id="chart-spending" height="200"></canvas></div>
-      <div class="chart-card"><div class="chart-title">Budget Usage %</div><canvas id="chart-budget" height="200"></canvas></div>
-    </div>
-    <div class="analytics-grid">
-      <div class="chart-card"><div class="chart-title">🏆 Top Sold Players</div><div id="analytics-top-players"></div></div>
-      <div class="chart-card"><div class="chart-title">Rating vs Sale Price</div><canvas id="chart-scatter" height="200"></canvas></div>
-    </div>
-  </div>
-</div>
+<!-- ============================================================
+     MODALS
+     ============================================================ -->
 
-<!-- ═══════════════════════════════════════════
-     MODAL: Add Player
-═══════════════════════════════════════════ -->
-<div class="modal-overlay" id="modal-player">
-  <div class="modal-box">
-    <button class="modal-close" onclick="closeModal('modal-player')">✕</button>
-    <div class="modal-title" id="modal-player-title">Add Player</div>
-    <div class="grid-2">
-      <div class="field"><label class="label">Name *</label><input class="input" id="pl-name" placeholder="e.g. Virat Kohli"></div>
-      <div class="field"><label class="label">Base Price (₹L) *</label><input class="input" id="pl-base" type="number" placeholder="20" min="1"></div>
-      <div class="field"><label class="label">Age</label><input class="input" id="pl-age" type="number" placeholder="28" min="15" max="50"></div>
-      <div class="field"><label class="label">Country</label><input class="input" id="pl-country" placeholder="India"></div>
-      <div class="field"><label class="label">Role / Position</label><select class="input" id="pl-role"></select></div>
-      <div class="field"><label class="label">Category</label>
-        <select class="input" id="pl-cat">
-          <option value="platinum">Platinum</option>
-          <option value="gold">Gold</option>
-          <option value="silver" selected>Silver</option>
-          <option value="bronze">Bronze</option>
-          <option value="uncapped">Uncapped</option>
+<!-- CREATE ROOM -->
+<div class="modal-overlay hidden" id="createRoomModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">🏟 Create Auction Room</span>
+      <button class="close-btn" onclick="closeModal('createRoomModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Room Name</label>
+        <input type="text" id="crRoomName" placeholder="e.g. IPL 2025 Mega Auction">
+      </div>
+      <div class="form-group">
+        <label>Sport</label>
+        <select id="crSport" onchange="updateStatTemplate()">
+          <option value="cricket">🏏 Cricket</option>
+          <option value="football">⚽ Football</option>
+          <option value="basketball">🏀 Basketball</option>
+          <option value="custom">⚡ Custom</option>
         </select>
       </div>
-    </div>
-    <div class="field"><label class="label">Player Image URL (optional)</label><input class="input" id="pl-img" placeholder="https://..."></div>
-    <div style="margin-bottom:1rem">
-      <div class="label" style="margin-bottom:.6rem">Performance Stats</div>
-      <div id="player-stats-fields" class="grid-3"></div>
-      <button class="btn btn-outline btn-sm" style="margin-top:.6rem" onclick="addCustomStat()">+ Custom Stat</button>
-    </div>
-    <div style="display:flex;gap:.5rem;justify-content:flex-end">
-      <button class="btn btn-outline" onclick="closeModal('modal-player')">Cancel</button>
-      <button class="btn btn-gold" id="modal-player-save" onclick="savePlayer()">Add Player</button>
+      <div class="form-group">
+        <label>Timer (seconds per player)</label>
+        <input type="number" id="crTimer" value="30" min="10" max="120">
+      </div>
+      <div class="form-group">
+        <label>Default Base Price (₹ Crores)</label>
+        <input type="number" id="crBase" value="5" step="0.5">
+      </div>
+      <button class="btn btn-gold fw-btn" onclick="createRoom()">Create Room →</button>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════
-     MODAL: Add Team
-═══════════════════════════════════════════ -->
-<div class="modal-overlay" id="modal-team">
-  <div class="modal-box">
-    <button class="modal-close" onclick="closeModal('modal-team')">✕</button>
-    <div class="modal-title">Create Team</div>
-    <div class="grid-2">
-      <div class="field"><label class="label">Team Name *</label><input class="input" id="tm-name" placeholder="e.g. Mumbai Indians"></div>
-      <div class="field"><label class="label">Short Name (max 4)</label><input class="input" id="tm-short" placeholder="MI" maxlength="4" oninput="this.value=this.value.toUpperCase()"></div>
-      <div class="field"><label class="label">Budget (₹ Lakhs) *</label><input class="input" id="tm-budget" type="number" placeholder="8000" min="100"></div>
-      <div class="field">
-        <label class="label">Team Color</label>
-        <div style="display:flex;align-items:center;gap:.6rem">
-          <input type="color" id="tm-color" value="#6366f1" style="width:44px;height:38px;border-radius:7px;border:none;cursor:pointer;background:transparent">
-          <span id="tm-color-text" class="text-muted text-sm">#6366f1</span>
+<!-- ADD PLAYER -->
+<div class="modal-overlay hidden" id="addPlayerModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">👤 Add Player</span>
+      <button class="close-btn" onclick="closeModal('addPlayerModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group">
+          <label>Player Name</label>
+          <input type="text" id="apName" placeholder="e.g. Virat Kohli">
+        </div>
+        <div class="form-group">
+          <label>Emoji / Icon</label>
+          <input type="text" id="apEmoji" placeholder="🏏" maxlength="2">
+        </div>
+        <div class="form-group">
+          <label>Age</label>
+          <input type="number" id="apAge" value="25" min="15" max="50">
+        </div>
+        <div class="form-group">
+          <label>Country</label>
+          <input type="text" id="apCountry" placeholder="India">
+        </div>
+        <div class="form-group">
+          <label>Position/Role</label>
+          <input type="text" id="apRole" placeholder="Batsman">
+        </div>
+        <div class="form-group">
+          <label>Base Price (₹ Cr)</label>
+          <input type="number" id="apBase" value="5" step="0.5">
         </div>
       </div>
-    </div>
-    <div style="display:flex;gap:.5rem;justify-content:flex-end">
-      <button class="btn btn-outline" onclick="closeModal('modal-team')">Cancel</button>
-      <button class="btn btn-gold" onclick="saveTeam()">Create Team</button>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="apCategory">
+          <option value="A+">A+ (Elite)</option>
+          <option value="A">A (Premium)</option>
+          <option value="B">B (Good)</option>
+          <option value="C">C (Standard)</option>
+        </select>
+      </div>
+      <div id="playerStatsForm" style="margin-top:16px">
+        <h3 class="raj" style="font-size:13px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">📊 Player Stats</h3>
+        <div id="statFields" style="display:grid;grid-template-columns:1fr 1fr;gap:12px"></div>
+        <button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="addCustomStatField()">+ Custom Stat</button>
+      </div>
+      <div id="addPlayerRoomSelect" style="margin-top:16px">
+        <div class="form-group">
+          <label>Add to Room</label>
+          <select id="apRoom">
+            <option value="">Select room...</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-gold fw-btn" style="margin-top:16px" onclick="addPlayer()">Add Player →</button>
     </div>
   </div>
 </div>
 
-<!-- Toast Container -->
-<div id="toast-container"></div>
+<!-- SOLD OVERLAY -->
+<div class="sold-overlay hidden" id="soldOverlay">
+  <div class="sold-card" id="soldCard">
+    <div class="sold-stamp">🔨</div>
+    <div class="sold-text" id="soldText">SOLD!</div>
+    <div class="sold-player" id="soldPlayerName"></div>
+    <div class="sold-details">To <strong id="soldToTeam"></strong> for <strong id="soldForPrice"></strong></div>
+    <div style="margin-top:24px;color:var(--muted);font-size:13px" id="soldCountdown">Continuing in 4...</div>
+  </div>
+</div>
 
 <script>
-// ══════════════════════════════════════════════════════════════
-//  ProBid Arena — Complete Single-File App
-//  All state is in-memory. No backend required.
-// ══════════════════════════════════════════════════════════════
+// ============================================================
+//  SHARED STATE (simulates a backend via BroadcastChannel)
+// ============================================================
 
-const APP = {
-  currentUser: null,
-  currentRoom: null,
-  currentTab: 'players',
-  editingPlayer: null,
-  selectedRole: 'bidder',
-  selectedSport: 'cricket',
-  selectedTeams: 2,
-  auctionTimer: null,
-  auctionState: {
-    active: false,
-    currentPlayerIdx: -1,
-    currentPlayer: null,
-    timerSeconds: 0,
-    highestBid: 0,
-    highestTeam: null,
-    highestBidder: null,
-    bidHistory: [],
-    locked: false,
-    paused: false,
-    complete: false,
-  },
-  charts: {},
-};
+// BroadcastChannel acts as our "real-time" server for same-origin tabs
+let bc; // BroadcastChannel
+let currentUser = null;
+let currentRoomId = null;
+let timerInterval = null;
+let timerLeft = 30;
 
-// ── DEMO DATA ──────────────────────────────────────────────────
-const DEMO_USERS = [
-  { id:'u1', name:'Admin User', email:'admin@demo.com', password:'demo123', role:'admin', color:'#f59e0b' },
-  { id:'u2', name:'Team Alpha', email:'bidder@demo.com', password:'demo123', role:'bidder', color:'#6366f1' },
-];
-
-const SPORT_ICONS = { cricket:'🏏', football:'⚽', basketball:'🏀', custom:'🏆' };
-const CAT_COLORS = { platinum:'#e2e8f0', gold:'#F5A623', silver:'#94a3b8', bronze:'#b45309', uncapped:'#4b5563' };
-
-const STAT_TEMPLATES = {
-  cricket: [
-    {key:'matches',label:'Matches'},{key:'runs',label:'Runs'},{key:'batting_avg',label:'Batting Avg'},
-    {key:'strike_rate',label:'Strike Rate'},{key:'wickets',label:'Wickets'},{key:'economy',label:'Economy'},
-  ],
-  football: [
-    {key:'matches',label:'Matches'},{key:'goals',label:'Goals'},{key:'assists',label:'Assists'},
-    {key:'pass_acc',label:'Pass Acc%'},{key:'tackles',label:'Tackles'},{key:'yellow',label:'Yellow Cards'},
-  ],
-  basketball: [
-    {key:'games',label:'Games'},{key:'ppg',label:'Points/Game'},{key:'apg',label:'Assists/Game'},
-    {key:'rpg',label:'Rebounds/Game'},{key:'spg',label:'Steals/Game'},{key:'fg_pct',label:'FG %'},
-  ],
-  custom: [
-    {key:'matches',label:'Matches'},{key:'score',label:'Score'},{key:'rating',label:'Rating'},
-  ],
-};
-
-const SPORT_ROLES = {
-  cricket:['Batsman','Bowler','All-Rounder','Wicket-Keeper','Bat-WK'],
-  football:['Goalkeeper','Defender','Midfielder','Forward','Winger'],
-  basketball:['Point Guard','Shooting Guard','Small Forward','Power Forward','Center'],
-  custom:['Player','Captain','Vice Captain','Specialist'],
-};
-
-// ── Demo room with players and teams ──────────────────────────
-const DEMO_ROOMS = [{
-  id: 'r1',
-  name: 'IPL Mega Auction 2025',
-  sport: 'cricket',
-  code: 'IPL123',
-  adminId: 'u1',
-  status: 'waiting',
-  timerDuration: 30,
-  maxTeams: 3,
-  createdAt: Date.now(),
-}];
-
-const DEMO_PLAYERS = [
-  { id:'p1', roomId:'r1', name:'Virat Kohli', age:35, country:'India', role:'Batsman', category:'platinum', basePrice:200, image:'', status:'pending', performanceRating:94, suggestedPrice:320, stats:[{key:'matches',label:'Matches',value:237},{key:'runs',label:'Runs',value:8004},{key:'batting_avg',label:'Batting Avg',value:53.5},{key:'strike_rate',label:'Strike Rate',value:131.5},{key:'wickets',label:'Wickets',value:4},{key:'economy',label:'Economy',value:8.8}]},
-  { id:'p2', roomId:'r1', name:'Rohit Sharma', age:36, country:'India', role:'Batsman', category:'platinum', basePrice:200, image:'', status:'pending', performanceRating:91, suggestedPrice:290, stats:[{key:'matches',label:'Matches',value:227},{key:'runs',label:'Runs',value:5879},{key:'batting_avg',label:'Batting Avg',value:29.6},{key:'strike_rate',label:'Strike Rate',value:130.5},{key:'wickets',label:'Wickets',value:0},{key:'economy',label:'Economy',value:0}]},
-  { id:'p3', roomId:'r1', name:'Jasprit Bumrah', age:30, country:'India', role:'Bowler', category:'gold', basePrice:150, image:'', status:'pending', performanceRating:96, suggestedPrice:275, stats:[{key:'matches',label:'Matches',value:135},{key:'runs',label:'Runs',value:56},{key:'batting_avg',label:'Batting Avg',value:4.3},{key:'strike_rate',label:'Strike Rate',value:72},{key:'wickets',label:'Wickets',value:145},{key:'economy',label:'Economy',value:7.4}]},
-  { id:'p4', roomId:'r1', name:'MS Dhoni', age:42, country:'India', role:'Wicket-Keeper', category:'platinum', basePrice:200, image:'', status:'pending', performanceRating:89, suggestedPrice:250, stats:[{key:'matches',label:'Matches',value:234},{key:'runs',label:'Runs',value:5082},{key:'batting_avg',label:'Batting Avg',value:39.1},{key:'strike_rate',label:'Strike Rate',value:136.1},{key:'wickets',label:'Wickets',value:0},{key:'economy',label:'Economy',value:0}]},
-  { id:'p5', roomId:'r1', name:'Ben Stokes', age:32, country:'England', role:'All-Rounder', category:'gold', basePrice:150, image:'', status:'pending', performanceRating:88, suggestedPrice:230, stats:[{key:'matches',label:'Matches',value:121},{key:'runs',label:'Runs',value:2794},{key:'batting_avg',label:'Batting Avg',value:28.5},{key:'strike_rate',label:'Strike Rate',value:132.0},{key:'wickets',label:'Wickets',value:70},{key:'economy',label:'Economy',value:8.5}]},
-  { id:'p6', roomId:'r1', name:'Pat Cummins', age:30, country:'Australia', role:'Bowler', category:'gold', basePrice:100, image:'', status:'pending', performanceRating:85, suggestedPrice:185, stats:[{key:'matches',label:'Matches',value:94},{key:'runs',label:'Runs',value:422},{key:'batting_avg',label:'Batting Avg',value:13.8},{key:'strike_rate',label:'Strike Rate',value:123},{key:'wickets',label:'Wickets',value:102},{key:'economy',label:'Economy',value:8.2}]},
-  { id:'p7', roomId:'r1', name:'Glenn Maxwell', age:35, country:'Australia', role:'All-Rounder', category:'gold', basePrice:100, image:'', status:'pending', performanceRating:82, suggestedPrice:165, stats:[{key:'matches',label:'Matches',value:117},{key:'runs',label:'Runs',value:2771},{key:'batting_avg',label:'Batting Avg',value:24.7},{key:'strike_rate',label:'Strike Rate',value:154},{key:'wickets',label:'Wickets',value:32},{key:'economy',label:'Economy',value:9.1}]},
-  { id:'p8', roomId:'r1', name:'Shubman Gill', age:24, country:'India', role:'Batsman', category:'silver', basePrice:75, image:'', status:'pending', performanceRating:78, suggestedPrice:120, stats:[{key:'matches',label:'Matches',value:77},{key:'runs',label:'Runs',value:2177},{key:'batting_avg',label:'Batting Avg',value:36.5},{key:'strike_rate',label:'Strike Rate',value:133},{key:'wickets',label:'Wickets',value:0},{key:'economy',label:'Economy',value:0}]},
-];
-
-const DEMO_TEAMS = [
-  { id:'t1', roomId:'r1', name:'Mumbai Indians', short:'MI', color:'#1e40af', ownerId:'u1', budget:800, remaining:800, spent:0, players:[] },
-  { id:'t2', roomId:'r1', name:'Chennai Kings', short:'CSK', color:'#d97706', ownerId:'u2', budget:750, remaining:750, spent:0, players:[] },
-];
-
-// In-memory state
-let users = [...DEMO_USERS];
-let rooms = [...DEMO_ROOMS];
-let players = [...DEMO_PLAYERS];
-let teams = [...DEMO_TEAMS];
-let customStats = [];
-
-// ══════════════════════════════════════════════════════════════
-//  UTILITY
-// ══════════════════════════════════════════════════════════════
-function uid() { return 'x' + Math.random().toString(36).substr(2, 9); }
-function randomCode() { return Math.random().toString(36).substr(2,6).toUpperCase(); }
-function fmt(n) { return n.toLocaleString(); }
-function pct(a,b) { return b > 0 ? Math.round(a/b*100) : 0; }
-
-function toast(msg, type='info') {
-  const c = document.getElementById('toast-container');
-  const t = document.createElement('div');
-  t.className = `toast ${type}`;
-  const icons = {success:'✅',error:'❌',info:'💡'};
-  t.innerHTML = `<span>${icons[type]||'💡'}</span><span>${msg}</span>`;
-  c.appendChild(t);
-  setTimeout(() => t.remove(), 3200);
+// ---- PERSISTENT STATE in localStorage ----
+function getState() {
+  return JSON.parse(localStorage.getItem('probid_state') || '{}');
 }
-
-function goTo(screen) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('screen-' + screen).classList.add('active');
-  const nav = document.getElementById('main-nav');
-  nav.style.display = screen === 'auth' ? 'none' : 'flex';
-  updateNav();
-  if (screen === 'dashboard') renderDashboard();
-  if (screen === 'join') renderJoinScreen();
+function setState(fn) {
+  const s = getState();
+  fn(s);
+  localStorage.setItem('probid_state', JSON.stringify(s));
 }
-
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-function updateNav() {
-  if (!APP.currentUser) return;
-  const u = APP.currentUser;
-  document.getElementById('nav-username').textContent = u.name;
-  document.getElementById('nav-role').textContent = u.role;
-  const av = document.getElementById('nav-avatar');
-  av.textContent = u.name.charAt(0).toUpperCase();
-  av.style.background = u.color;
-
-  const actions = document.getElementById('nav-actions');
-  if (u.role === 'admin') {
-    actions.innerHTML = `<button class="btn btn-gold btn-sm" onclick="goTo('create-room')">+ New Auction</button>`;
-  } else {
-    actions.innerHTML = `<button class="btn btn-outline btn-sm" onclick="goTo('join')">🎯 Join Room</button>`;
+function initState() {
+  if (!localStorage.getItem('probid_state')) {
+    localStorage.setItem('probid_state', JSON.stringify({
+      users: [
+        {id:'u1',username:'admin1',password:'pass',name:'Admin One',role:'admin',teamName:null,budget:null,emoji:'A'},
+        {id:'u2',username:'bidder1',password:'pass',name:'Team Mumbai',role:'bidder',teamName:'Mumbai Tigers',budget:100,remaining:100,emoji:'🐯'},
+        {id:'u3',username:'bidder2',password:'pass',name:'Team Delhi',role:'bidder',teamName:'Delhi Dragons',budget:80,remaining:80,emoji:'🐉'},
+      ],
+      rooms: [],
+      players: [],
+      bids: [],
+      soldPlayers: []
+    }));
   }
 }
 
-// ══════════════════════════════════════════════════════════════
+// ============================================================
+//  BROADCAST (real-time across tabs)
+// ============================================================
+function broadcast(type, data={}) {
+  if(bc) bc.postMessage({type, data, from: currentUser?.id, ts: Date.now()});
+}
+
+function setupBroadcast() {
+  bc = new BroadcastChannel('probid_arena');
+  bc.onmessage = ({data: msg}) => {
+    if(msg.from === currentUser?.id) return; // ignore own
+    handleBroadcast(msg);
+  };
+}
+
+function handleBroadcast(msg) {
+  switch(msg.type) {
+    case 'STATE_CHANGED':
+      if(currentRoomId) {
+        renderAuction();
+        renderBidHistory();
+        renderTeamsSidebar();
+        renderPlayerSidebar();
+      }
+      renderLobby();
+      break;
+    case 'BID_PLACED':
+      if(currentRoomId === msg.data.roomId) {
+        flashBid(msg.data);
+        renderBidHistory();
+        renderTeamsSidebar();
+        updateBidDisplay();
+      }
+      break;
+    case 'AUCTION_STARTED':
+      if(currentRoomId === msg.data.roomId) {
+        renderAuction();
+        showToast('Auction has started!', 'success');
+      }
+      break;
+    case 'NEXT_PLAYER':
+      if(currentRoomId === msg.data.roomId) {
+        renderAuction();
+        showToast(`Next: ${msg.data.playerName}`, 'info');
+      }
+      break;
+    case 'PLAYER_SOLD':
+      if(currentRoomId === msg.data.roomId) {
+        showSoldOverlay(msg.data);
+      }
+      break;
+    case 'AUCTION_RESET':
+      if(currentRoomId === msg.data.roomId) {
+        clearInterval(timerInterval);
+        renderAuction();
+        showToast('Auction reset by admin', 'info');
+      }
+      break;
+    case 'USER_JOINED':
+      updateOnlineCount(msg.data.roomId);
+      break;
+  }
+}
+
+// ============================================================
 //  AUTH
-// ══════════════════════════════════════════════════════════════
+// ============================================================
 function switchAuthTab(tab) {
-  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-  event.target.classList.add('active');
-  document.getElementById('auth-login').style.display = tab === 'login' ? 'block' : 'none';
-  document.getElementById('auth-register').style.display = tab === 'register' ? 'block' : 'none';
+  const btns = document.querySelectorAll('.tab-btn');
+  btns[0].classList.toggle('active', tab==='login');
+  btns[1].classList.toggle('active', tab==='register');
+  document.getElementById('loginForm').classList.toggle('hidden', tab!=='login');
+  document.getElementById('registerForm').classList.toggle('hidden', tab!=='register');
 }
 
-function selectRole(role) {
-  APP.selectedRole = role;
-  document.getElementById('role-bidder').classList.toggle('selected', role === 'bidder');
-  document.getElementById('role-admin').classList.toggle('selected', role === 'admin');
+function handleLogin() {
+  const u = v('loginUser').trim(), p = v('loginPass'), r = v('loginRole');
+  const s = getState();
+  const user = s.users.find(x=>x.username===u && x.password===p);
+  if(!user) { showToast('Invalid credentials', 'error'); return; }
+  if(user.role !== r) { showToast(`This account is a ${user.role}, not ${r}`, 'error'); return; }
+  loginAs(user);
 }
 
-function doLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const pass = document.getElementById('login-pass').value;
-  const u = users.find(u => u.email === email && u.password === pass);
-  if (!u) { toast('Invalid credentials', 'error'); return; }
-  APP.currentUser = u;
-  toast(`Welcome back, ${u.name}! 🏆`, 'success');
-  goTo('dashboard');
+function handleRegister() {
+  const name = v('regName').trim(), username = v('regUser').trim(), pass = v('regPass'),
+        role = v('regRole'), team = v('regTeam').trim(), budget = parseFloat(v('regBudget')), emoji = v('regEmoji')||'🎯';
+  if(!name||!username||!pass) { showToast('Fill all required fields', 'error'); return; }
+  setState(s=>{
+    if(s.users.find(x=>x.username===username)){ showToast('Username taken','error'); return; }
+    const user = {id:'u'+Date.now(), username, password:pass, name, role, teamName:role==='bidder'?team:null, budget:role==='bidder'?budget:null, remaining:role==='bidder'?budget:null, emoji:emoji||'🎯'};
+    s.users.push(user);
+    const u2 = s.users.find(x=>x.username===username);
+    if(u2) loginAs(u2);
+  });
+  const s2 = getState();
+  const newUser = s2.users.find(x=>x.username===username);
+  if(newUser) loginAs(newUser);
 }
 
-function doRegister() {
-  const name = document.getElementById('reg-name').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const pass = document.getElementById('reg-pass').value;
-  if (!name || !email || !pass) { toast('Fill in all fields', 'error'); return; }
-  if (users.find(u => u.email === email)) { toast('Email already exists', 'error'); return; }
-  const colors = ['#6366f1','#ec4899','#14b8a6','#f97316','#8b5cf6'];
-  const u = { id:uid(), name, email, password:pass, role:APP.selectedRole, color:colors[Math.floor(Math.random()*colors.length)] };
-  users.push(u);
-  APP.currentUser = u;
-  toast('Account created! Welcome 🎉', 'success');
-  goTo('dashboard');
-}
-
-function doLogout() {
-  APP.currentUser = null;
-  APP.currentRoom = null;
-  clearInterval(APP.auctionTimer);
-  goTo('auth');
-}
-
-// ══════════════════════════════════════════════════════════════
-//  DASHBOARD
-// ══════════════════════════════════════════════════════════════
-function renderDashboard() {
-  const u = APP.currentUser;
-  document.getElementById('dash-greeting').textContent = `Welcome, ${u.name} 👋`;
-  document.getElementById('dash-sub').textContent = u.role === 'admin' ? 'Manage your auction rooms' : 'Join an auction to start bidding';
-
-  const myRooms = u.role === 'admin'
-    ? rooms.filter(r => r.adminId === u.id)
-    : rooms.filter(r => teams.some(t => t.roomId === r.id && t.ownerId === u.id));
-
-  const stats = [
-    { val: myRooms.length, lbl: 'Total Rooms', icon: '🏟' },
-    { val: myRooms.filter(r=>r.status==='active').length, lbl: 'Active', icon: '🔴' },
-    { val: myRooms.filter(r=>r.status==='completed').length, lbl: 'Completed', icon: '✅' },
-    { val: players.filter(p => myRooms.some(r => r.id===p.roomId)).length, lbl: 'Players', icon: '👤' },
-  ];
-
-  document.getElementById('dash-stats').innerHTML = stats.map(s => `
-    <div class="stat-card">
-      <div style="font-size:1.5rem">${s.icon}</div>
-      <div class="stat-val">${s.val}</div>
-      <div class="stat-lbl">${s.lbl}</div>
-    </div>`).join('');
-
-  document.getElementById('dash-actions').innerHTML = u.role === 'admin'
-    ? `<button class="btn btn-gold btn-sm" onclick="goTo('create-room')">⚡ New Room</button>`
-    : `<button class="btn btn-gold btn-sm" onclick="goTo('join')">🎯 Join Room</button>`;
-
-  const grid = document.getElementById('dash-rooms');
-  if (!myRooms.length) {
-    grid.innerHTML = `<div class="empty-state"><span class="empty-icon">🏟</span><p class="empty-text">No rooms yet.<br>${u.role==='admin'?'Create your first auction!':'Ask admin for a room code.'}</p></div>`;
-    return;
-  }
-
-  const statusBadge = { waiting:'badge-blue', active:'badge-green', paused:'badge-gold', completed:'badge-gray' };
-  grid.innerHTML = myRooms.map(r => {
-    const rPlayers = players.filter(p=>p.roomId===r.id);
-    const rTeams = teams.filter(t=>t.roomId===r.id);
-    return `<div class="room-card" onclick="enterRoom('${r.id}')">
-      <div class="room-sport-icon">${SPORT_ICONS[r.sport]}</div>
-      <div class="room-name">${r.name}</div>
-      <div class="room-meta">
-        <span>👥 ${rTeams.length}/${r.maxTeams}</span>
-        <span>⚡ ${rPlayers.length} players</span>
-        <span class="room-code">${r.code}</span>
-      </div>
-      <div style="margin-bottom:.75rem"><span class="badge ${statusBadge[r.status]||'badge-gray'}">${r.status}</span></div>
-      <div class="room-actions">
-        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();enterRoom('${r.id}')">View Lobby</button>
-        ${r.status==='active'||r.status==='paused'?`<button class="btn btn-gold btn-sm" onclick="event.stopPropagation();enterAuction('${r.id}')">📡 Live</button>`:''}
-        ${r.status==='completed'?`<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();enterAnalytics('${r.id}')">📊 Stats</button>`:''}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ══════════════════════════════════════════════════════════════
-//  CREATE ROOM
-// ══════════════════════════════════════════════════════════════
-function selectSport(el) {
-  document.querySelectorAll('.sport-opt[data-sport]').forEach(e => e.classList.remove('selected'));
-  el.classList.add('selected');
-  APP.selectedSport = el.dataset.sport;
-  document.getElementById('custom-sport-wrap').style.display = APP.selectedSport === 'custom' ? 'block' : 'none';
-}
-function selectTeams(el) {
-  document.querySelectorAll('.sport-opt[data-teams]').forEach(e => e.classList.remove('selected'));
-  el.classList.add('selected');
-  APP.selectedTeams = parseInt(el.dataset.teams);
-}
-function createStep2() {
-  const name = document.getElementById('cr-name').value.trim();
-  if (!name) { toast('Enter a room name', 'error'); return; }
-  if (APP.selectedSport === 'custom' && !document.getElementById('cr-custom-sport').value.trim()) {
-    toast('Enter custom sport name', 'error'); return;
-  }
-  document.getElementById('create-step1').style.display = 'none';
-  document.getElementById('create-step2').style.display = 'block';
-  document.getElementById('step1-dot').classList.remove('active'); document.getElementById('step1-dot').classList.add('done');
-  document.getElementById('step-line-1').classList.add('done');
-  document.getElementById('step2-dot').classList.remove('pending'); document.getElementById('step2-dot').classList.add('active');
-  const sport = APP.selectedSport === 'custom' ? document.getElementById('cr-custom-sport').value : APP.selectedSport;
-  document.getElementById('room-summary').innerHTML = `
-    <div style="display:flex;justify-content:space-between"><span class="text-muted">Name</span><span>${name}</span></div>
-    <div style="display:flex;justify-content:space-between"><span class="text-muted">Sport</span><span style="text-transform:capitalize">${sport}</span></div>
-    <div style="display:flex;justify-content:space-between"><span class="text-muted">Timer</span><span id="summary-timer">30s</span></div>
-    <div style="display:flex;justify-content:space-between"><span class="text-muted">Max Teams</span><span>${APP.selectedTeams}</span></div>`;
-  document.getElementById('cr-timer').oninput = function() {
-    document.getElementById('cr-timer-val').textContent = this.value + 's';
-    document.getElementById('summary-timer').textContent = this.value + 's';
-  };
-}
-function createStep1() {
-  document.getElementById('create-step1').style.display = 'block';
-  document.getElementById('create-step2').style.display = 'none';
-  document.getElementById('step1-dot').classList.add('active'); document.getElementById('step1-dot').classList.remove('done');
-  document.getElementById('step-line-1').classList.remove('done');
-  document.getElementById('step2-dot').classList.remove('active'); document.getElementById('step2-dot').classList.add('pending');
-}
-function doCreateRoom() {
-  const name = document.getElementById('cr-name').value.trim();
-  const timer = parseInt(document.getElementById('cr-timer').value);
-  const r = { id:uid(), name, sport:APP.selectedSport, code:randomCode(), adminId:APP.currentUser.id, status:'waiting', timerDuration:timer, maxTeams:APP.selectedTeams, createdAt:Date.now() };
-  rooms.push(r);
-  APP.currentRoom = r;
-  toast(`Room "${name}" created! Code: ${r.code}`, 'success');
-  document.getElementById('cr-name').value = '';
-  createStep1();
-  goTo('lobby');
+function loginAs(user) {
+  currentUser = user;
+  setupBroadcast();
+  showScreen('lobbyScreen');
   renderLobby();
+  showToast(`Welcome back, ${user.name}! 🎉`, 'success');
 }
 
-// ══════════════════════════════════════════════════════════════
-//  JOIN ROOM
-// ══════════════════════════════════════════════════════════════
-
-function renderJoinScreen() {
-  var container = document.getElementById('join-all-rooms');
-  if (!container) return;
-
-  if (rooms.length === 0) {
-    container.innerHTML = '<div class="empty-state"><span class="empty-icon">🏟</span><p class="empty-text">No rooms available yet.<br>Ask your admin to create one.</p></div>';
-    return;
-  }
-
-  var html = '';
-  for (var i = 0; i < rooms.length; i++) {
-    var r = rooms[i];
-    var rTeams = teams.filter(function(t){ return t.roomId === r.id; });
-    var rPlayers = players.filter(function(p){ return p.roomId === r.id; });
-    var statusClass = r.status === 'active' ? 'badge-green' : r.status === 'completed' ? 'badge-gray' : 'badge-blue';
-    var sportIcon = SPORT_ICONS[r.sport] || '🏆';
-    html += '<div onclick="enterRoomDirect('' + r.id + '')" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.25rem;cursor:pointer;margin-bottom:.85rem;transition:all .2s;position:relative;overflow:hidden" onmouseover="this.style.borderColor='rgba(245,166,35,.5)';this.style.background='var(--raised)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--card)'">';
-    html += '<div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),transparent)"></div>';
-    html += '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem">';
-    html += '<div style="display:flex;align-items:center;gap:.85rem">';
-    html += '<span style="font-size:2.2rem">' + sportIcon + '</span>';
-    html += '<div>';
-    html += '<div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.15rem">' + r.name + '</div>';
-    html += '<div style="font-size:.78rem;color:var(--muted);margin-top:.2rem;text-transform:capitalize">' + (r.customSportName || r.sport) + ' &nbsp;·&nbsp; ' + rTeams.length + ' teams &nbsp;·&nbsp; ' + rPlayers.length + ' players</div>';
-    html += '</div></div>';
-    html += '<div style="display:flex;align-items:center;gap:.75rem">';
-    html += '<span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--gold);letter-spacing:.12em;font-size:1rem">' + r.code + '</span>';
-    html += '<span class="badge ' + statusClass + '">' + r.status + '</span>';
-    html += '<span style="color:var(--gold);font-size:1.3rem">→</span>';
-    html += '</div></div></div>';
-  }
-
-  container.innerHTML = html;
+function logout() {
+  broadcast('USER_LEFT', {});
+  currentUser = null; currentRoomId = null;
+  clearInterval(timerInterval);
+  bc?.close();
+  showScreen('loginScreen');
 }
 
-function enterRoomDirect(roomId) {
-  var r = null;
-  for (var i = 0; i < rooms.length; i++) {
-    if (rooms[i].id === roomId) { r = rooms[i]; break; }
-  }
-  if (!r) { toast('Room not found', 'error'); return; }
-  APP.currentRoom = r;
-  toast('Entered ' + r.name + '!', 'success');
-  goTo('lobby');
-  renderLobby();
-}
-
-function enterRoomfunction enterRoom(roomId) {
-  APP.currentRoom = rooms.find(r => r.id === roomId);
-  goTo('lobby');
-  renderLobby();
-}
-function copyCode() {
-  navigator.clipboard.writeText(APP.currentRoom.code);
-  toast('Room code copied!', 'success');
-}
-function lobbyTab(tab) {
-  APP.currentTab = tab;
-  document.getElementById('lobby-players-tab').style.display = tab === 'players' ? 'block' : 'none';
-  document.getElementById('lobby-teams-tab').style.display = tab === 'teams' ? 'block' : 'none';
-  document.querySelectorAll('.lobby-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='players')||(i===1&&tab==='teams')));
-}
-
+// ============================================================
+//  LOBBY
+// ============================================================
 function renderLobby() {
-  const r = APP.currentRoom;
-  const u = APP.currentUser;
-  const isAdmin = u.id === r.adminId;
-  const rPlayers = players.filter(p => p.roomId === r.id);
-  const rTeams = teams.filter(t => t.roomId === r.id);
+  if(!currentUser) return;
+  document.getElementById('userName').textContent = currentUser.name;
+  document.getElementById('userBadge').textContent = currentUser.role === 'admin' ? '🛡 Admin' : '💰 Bidder';
+  document.getElementById('userBadge').className = `badge ${currentUser.role==='admin'?'badge-admin':'badge-bidder'}`;
+  document.getElementById('userAvatar').textContent = currentUser.emoji || currentUser.name[0].toUpperCase();
 
-  document.getElementById('lobby-sport-icon').textContent = SPORT_ICONS[r.sport];
-  document.getElementById('lobby-room-name').textContent = r.name;
-  document.getElementById('lobby-code').textContent = r.code;
-  document.getElementById('lobby-player-count').textContent = rPlayers.length;
-  document.getElementById('lobby-team-count').textContent = rTeams.length;
+  const isAdmin = currentUser.role === 'admin';
+  const adminCtrl = document.getElementById('adminLobbyControls');
+  if(isAdmin) { adminCtrl.classList.remove('hidden'); adminCtrl.style.display='flex'; }
+  else adminCtrl.style.display='none';
 
-  const statusBadgeMap = { waiting:'badge-blue', active:'badge-green', paused:'badge-gold', completed:'badge-gray' };
-  document.getElementById('lobby-status-badge').className = `badge ${statusBadgeMap[r.status]||'badge-gray'}`;
-  document.getElementById('lobby-status-badge').textContent = r.status;
+  const s = getState();
+  const grid = document.getElementById('roomGrid');
+  grid.innerHTML = '';
+  const noMsg = document.getElementById('noRoomsMsg');
 
-  // Actions
-  const actionsEl = document.getElementById('lobby-actions');
-  let acts = [];
-  if (isAdmin) {
-    if (r.status === 'active' || r.status === 'paused') {
-      acts.push(`<button class="btn btn-gold btn-sm" onclick="enterAuction('${r.id}')">📡 Go Live</button>`);
-    } else if (r.status !== 'completed') {
-      acts.push(`<button class="btn btn-gold btn-sm" onclick="startAuction()">⚡ Start Auction</button>`);
-    }
-    if (r.status === 'completed') {
-      acts.push(`<button class="btn btn-outline btn-sm" onclick="enterAnalytics('${r.id}')">📊 Analytics</button>`);
-    }
-  } else {
-    if (r.status === 'active') acts.push(`<button class="btn btn-gold btn-sm" onclick="enterAuction('${r.id}')">🎯 Join Bidding</button>`);
-  }
-  actionsEl.innerHTML = acts.join('');
+  if(!s.rooms.length) { noMsg.style.display='block'; return; }
+  noMsg.style.display='none';
 
-  // Add player button (admin only)
-  document.getElementById('lobby-add-player-wrap').innerHTML = isAdmin
-    ? `<button class="btn btn-gold btn-sm" style="margin-bottom:1rem" onclick="openAddPlayer()">+ Add Player</button>` : '';
-
-  // Players grid
-  const pGrid = document.getElementById('lobby-players-grid');
-  if (!rPlayers.length) {
-    pGrid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><span class="empty-icon">👤</span><p class="empty-text">No players added yet</p></div>`;
-  } else {
-    pGrid.innerHTML = rPlayers.map(p => renderPlayerCard(p, isAdmin)).join('');
-  }
-
-  // Add team button
-  const hasMyTeam = rTeams.some(t => t.ownerId === u.id);
-  document.getElementById('lobby-add-team-wrap').innerHTML = (!hasMyTeam || isAdmin)
-    ? `<button class="btn btn-gold btn-sm" style="margin-bottom:1rem" onclick="openAddTeam()">+ Create Team</button>` : '';
-
-  // Teams grid
-  const tGrid = document.getElementById('lobby-teams-grid');
-  if (!rTeams.length) {
-    tGrid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><span class="empty-icon">🏆</span><p class="empty-text">No teams yet</p></div>`;
-  } else {
-    tGrid.innerHTML = rTeams.map(t => `
-      <div class="team-card">
-        <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.75rem">
-          <div class="team-logo" style="background:${t.color}">${t.short}</div>
-          <div>
-            <div style="font-weight:700;font-size:.95rem">${t.name}</div>
-            <div class="text-muted text-sm">₹${fmt(t.budget)}L budget</div>
-          </div>
-        </div>
-        <div class="grid-2" style="gap:.5rem;font-size:.8rem">
-          <div style="background:var(--raised);padding:.5rem;border-radius:7px;text-align:center">
-            <div style="font-weight:700;color:var(--gold)">₹${fmt(t.remaining)}L</div>
-            <div class="text-muted">Remaining</div>
-          </div>
-          <div style="background:var(--raised);padding:.5rem;border-radius:7px;text-align:center">
-            <div style="font-weight:700;color:var(--green)">${t.players.length}</div>
-            <div class="text-muted">Players</div>
-          </div>
-        </div>
-      </div>`).join('');
-  }
-}
-
-function renderPlayerCard(p, isAdmin) {
-  const catColor = CAT_COLORS[p.category] || '#4b5563';
-  const statusBadge = { pending:'badge-gray', active:'badge-blue', sold:'badge-green', unsold:'badge-red' };
-  return `<div class="player-card">
-    <div class="player-cat-stripe" style="background:${catColor}"></div>
-    <div style="display:flex;gap:.7rem;align-items:flex-start;margin-top:.35rem">
-      ${p.image ? `<img class="player-avatar" src="${p.image}" onerror="this.style.display='none'">` : `<div class="player-avatar-placeholder">🧑</div>`}
-      <div class="player-info">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.3rem">
-          <div class="player-name">${p.name}</div>
-          <span class="badge ${statusBadge[p.status]||'badge-gray'}" style="font-size:.6rem;flex-shrink:0">${p.status}</span>
-        </div>
-        <div class="player-meta">${p.role} · ${p.country} · ${p.age}y</div>
-        <div class="text-gold" style="font-size:.78rem;font-weight:700;margin-top:.25rem">₹${p.basePrice}L base</div>
+  s.rooms.forEach(room=>{
+    const sportEmoji = {cricket:'🏏',football:'⚽',basketball:'🏀',custom:'⚡'}[room.sport]||'⚡';
+    const sportLabel = {cricket:'Cricket',football:'Football',basketball:'Basketball',custom:'Custom'}[room.sport]||'Custom';
+    const players = s.players.filter(p=>p.roomId===room.id);
+    const sold = s.soldPlayers.filter(x=>x.roomId===room.id);
+    const card = document.createElement('div');
+    card.className = `room-card ${room.sport}`;
+    card.innerHTML = `
+      <div class="sport-badge sport-${room.sport}">${sportEmoji} ${sportLabel}</div>
+      <div class="room-name">${room.name}</div>
+      <div class="room-meta">
+        <span>⏱ ${room.timer}s/player</span>
+        <span>🏷 Base ₹${room.basePrice}Cr</span>
       </div>
-    </div>
-    <div style="margin-top:.6rem">
-      <div style="display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:.25rem">
-        <span class="text-muted">Performance</span>
-        <span class="text-gold font-bold">${p.performanceRating}/100</span>
+      <div class="room-stats">
+        <div class="room-stat"><div class="val">${players.length}</div><div class="lbl">Players</div></div>
+        <div class="room-stat"><div class="val green">${sold.length}</div><div class="lbl">Sold</div></div>
+        <div class="room-stat"><div class="val muted">${players.length-sold.length}</div><div class="lbl">Left</div></div>
       </div>
-      <div class="rating-bar"><div class="rating-fill" style="width:${p.performanceRating}%"></div></div>
-    </div>
-    <div class="ai-chip" style="margin-top:.5rem;font-size:.68rem">🤖 AI: ₹${p.suggestedPrice}L</div>
-    ${isAdmin ? `<div style="display:flex;gap:.4rem;margin-top:.65rem;padding-top:.65rem;border-top:1px solid var(--border)">
-      <button class="btn btn-outline btn-sm" style="flex:1;justify-content:center" onclick="openEditPlayer('${p.id}')">Edit</button>
-      <button class="btn btn-icon" onclick="deletePlayer('${p.id}')" title="Delete">🗑</button>
-    </div>` : ''}
-  </div>`;
-}
-
-function startAuction() {
-  const r = APP.currentRoom;
-  const rPlayers = players.filter(p => p.roomId === r.id && p.status === 'pending');
-  const rTeams = teams.filter(t => t.roomId === r.id);
-  if (rPlayers.length === 0) { toast('Add at least one player first', 'error'); return; }
-  if (rTeams.length < 2) { toast('Need at least 2 teams to start', 'error'); return; }
-  r.status = 'active';
-  toast('Auction started! 🏏', 'success');
-  enterAuction(r.id);
-}
-
-// ══════════════════════════════════════════════════════════════
-//  PLAYER MODAL
-// ══════════════════════════════════════════════════════════════
-function openAddPlayer() {
-  APP.editingPlayer = null;
-  document.getElementById('modal-player-title').textContent = 'Add Player';
-  document.getElementById('modal-player-save').textContent = 'Add Player';
-  clearPlayerForm();
-  buildStatFields();
-  openModal('modal-player');
-}
-function openEditPlayer(id) {
-  APP.editingPlayer = players.find(p => p.id === id);
-  const p = APP.editingPlayer;
-  document.getElementById('modal-player-title').textContent = 'Edit Player';
-  document.getElementById('modal-player-save').textContent = 'Save Changes';
-  document.getElementById('pl-name').value = p.name;
-  document.getElementById('pl-base').value = p.basePrice;
-  document.getElementById('pl-age').value = p.age || '';
-  document.getElementById('pl-country').value = p.country || '';
-  document.getElementById('pl-cat').value = p.category;
-  document.getElementById('pl-img').value = p.image || '';
-  buildStatFields(p.stats);
-  buildRoleSelect(p.role);
-  openModal('modal-player');
-}
-function clearPlayerForm() {
-  ['pl-name','pl-base','pl-age','pl-country','pl-img'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('pl-cat').value = 'silver';
-  customStats = [];
-  buildRoleSelect();
-}
-function buildRoleSelect(selected) {
-  const sport = APP.currentRoom?.sport || 'cricket';
-  const roles = SPORT_ROLES[sport] || SPORT_ROLES.custom;
-  const el = document.getElementById('pl-role');
-  el.innerHTML = roles.map(r => `<option value="${r}" ${r===selected?'selected':''}>${r}</option>`).join('');
-}
-function buildStatFields(existing) {
-  const sport = APP.currentRoom?.sport || 'cricket';
-  const template = STAT_TEMPLATES[sport] || STAT_TEMPLATES.custom;
-  const container = document.getElementById('player-stats-fields');
-  const allStats = template.map(s => {
-    const ev = existing?.find(e => e.key === s.key);
-    return { ...s, value: ev ? ev.value : '' };
-  });
-  // Add existing custom stats
-  if (existing) {
-    existing.filter(e => !template.find(t => t.key === e.key)).forEach(cs => allStats.push(cs));
-  }
-  customStats = [];
-  container.innerHTML = allStats.map(s => `
-    <div class="field" style="margin-bottom:.5rem">
-      <label class="label" style="font-size:.65rem">${s.label}</label>
-      <input class="input" id="stat-${s.key}" placeholder="0" value="${s.value}" style="padding:.45rem .7rem;font-size:.85rem">
-    </div>`).join('');
-}
-function addCustomStat() {
-  const key = prompt('Stat key (no spaces):');
-  const label = prompt('Stat label:');
-  if (!key || !label) return;
-  const container = document.getElementById('player-stats-fields');
-  const div = document.createElement('div');
-  div.className = 'field';
-  div.style.marginBottom = '.5rem';
-  div.innerHTML = `<label class="label" style="font-size:.65rem">${label}</label><input class="input" id="stat-${key}" placeholder="0" style="padding:.45rem .7rem;font-size:.85rem">`;
-  container.appendChild(div);
-  customStats.push({ key, label });
-}
-function collectStats() {
-  const sport = APP.currentRoom?.sport || 'cricket';
-  const template = STAT_TEMPLATES[sport] || STAT_TEMPLATES.custom;
-  const allKeys = [...template.map(s=>s), ...customStats];
-  return allKeys.map(s => {
-    const el = document.getElementById('stat-' + s.key);
-    return { key: s.key, label: s.label, value: el ? parseFloat(el.value)||0 : 0 };
-  }).filter(s => s.value > 0 || template.find(t=>t.key===s.key));
-}
-
-function calcRating(stats, sport) {
-  const m = {};
-  stats.forEach(s => m[s.key] = parseFloat(s.value)||0);
-  let score = 50;
-  if (sport === 'cricket') {
-    score += Math.min((m.batting_avg||0)/60*22, 22);
-    score += Math.min((m.strike_rate||0)/200*15, 15);
-    score += Math.min((m.wickets||0)/300*13, 13);
-    if (m.economy > 0) score += Math.max(0,(8-m.economy)/8*10);
-  } else if (sport === 'football') {
-    score += Math.min((m.goals||0)/30*22, 22);
-    score += Math.min((m.assists||0)/20*15, 15);
-    score += Math.min((m.pass_acc||0)/100*13, 13);
-  } else if (sport === 'basketball') {
-    score += Math.min((m.ppg||0)/35*25, 25);
-    score += Math.min((m.apg||0)/12*12, 12);
-    score += Math.min((m.rpg||0)/15*13, 13);
-  } else {
-    score += Math.min((m.rating||0)/100*50, 50);
-  }
-  return Math.min(Math.max(Math.round(score), 0), 100);
-}
-
-function savePlayer() {
-  const name = document.getElementById('pl-name').value.trim();
-  const base = parseFloat(document.getElementById('pl-base').value);
-  if (!name || !base) { toast('Name and base price required', 'error'); return; }
-  const stats = collectStats();
-  const sport = APP.currentRoom?.sport || 'cricket';
-  const rating = calcRating(stats, sport);
-  const suggested = Math.round(base * (1 + (rating - 50)/100));
-
-  if (APP.editingPlayer) {
-    Object.assign(APP.editingPlayer, {
-      name, basePrice: base,
-      age: parseInt(document.getElementById('pl-age').value)||0,
-      country: document.getElementById('pl-country').value.trim(),
-      role: document.getElementById('pl-role').value,
-      category: document.getElementById('pl-cat').value,
-      image: document.getElementById('pl-img').value.trim(),
-      stats, performanceRating: rating, suggestedPrice: suggested,
-    });
-    toast('Player updated!', 'success');
-  } else {
-    players.push({
-      id: uid(), roomId: APP.currentRoom.id,
-      name, age: parseInt(document.getElementById('pl-age').value)||0,
-      country: document.getElementById('pl-country').value.trim(),
-      role: document.getElementById('pl-role').value,
-      category: document.getElementById('pl-cat').value,
-      image: document.getElementById('pl-img').value.trim(),
-      basePrice: base, stats, status: 'pending',
-      performanceRating: rating, suggestedPrice: suggested,
-    });
-    toast('Player added!', 'success');
-  }
-  closeModal('modal-player');
-  renderLobby();
-}
-function deletePlayer(id) {
-  if (!confirm('Delete this player?')) return;
-  players = players.filter(p => p.id !== id);
-  toast('Player deleted', 'info');
-  renderLobby();
-}
-
-// ══════════════════════════════════════════════════════════════
-//  TEAM MODAL
-// ══════════════════════════════════════════════════════════════
-function openAddTeam() {
-  document.getElementById('tm-name').value = '';
-  document.getElementById('tm-short').value = '';
-  document.getElementById('tm-budget').value = '';
-  document.getElementById('tm-color').value = '#6366f1';
-  document.getElementById('tm-color-text').textContent = '#6366f1';
-  document.getElementById('tm-color').oninput = function() {
-    document.getElementById('tm-color-text').textContent = this.value;
-  };
-  openModal('modal-team');
-}
-function saveTeam() {
-  const name = document.getElementById('tm-name').value.trim();
-  const budget = parseFloat(document.getElementById('tm-budget').value);
-  if (!name || !budget) { toast('Name and budget required', 'error'); return; }
-  const short = document.getElementById('tm-short').value.trim() || name.substr(0,3).toUpperCase();
-  const color = document.getElementById('tm-color').value;
-  teams.push({
-    id: uid(), roomId: APP.currentRoom.id,
-    name, short, color,
-    ownerId: APP.currentUser.id,
-    budget, remaining: budget, spent: 0, players: [],
-  });
-  toast(`Team "${name}" created!`, 'success');
-  closeModal('modal-team');
-  renderLobby();
-}
-
-// ══════════════════════════════════════════════════════════════
-//  AUCTION ROOM
-// ══════════════════════════════════════════════════════════════
-function enterAuction(roomId) {
-  APP.currentRoom = rooms.find(r => r.id === roomId);
-  APP.auctionState = {
-    active: false, currentPlayerIdx: -1, currentPlayer: null,
-    timerSeconds: 0, highestBid: 0, highestTeam: null, highestBidder: null,
-    bidHistory: [], locked: false, paused: false, complete: false,
-  };
-  goTo('auction');
-  renderAuction();
-}
-
-function renderAuction() {
-  const r = APP.currentRoom;
-  const u = APP.currentUser;
-  const isAdmin = u.id === r.adminId;
-  const rTeams = teams.filter(t => t.roomId === r.id);
-  const st = APP.auctionState;
-
-  document.getElementById('auction-room-label').textContent = r.name;
-  document.getElementById('auction-status-badge').innerHTML = `<span class="badge ${r.status==='active'?'badge-green':'badge-gold'}">${r.status}</span>`;
-
-  // Budgets
-  renderBudgets();
-  renderProgress();
-
-  // Admin controls
-  const ctrlWrap = document.getElementById('admin-controls-wrap');
-  if (isAdmin) {
-    const pendingPlayers = players.filter(p => p.roomId === r.id && p.status === 'pending');
-    ctrlWrap.innerHTML = `<div class="admin-controls">
-      <div class="admin-ctrl-title">Admin Controls</div>
-      <div class="ctrl-buttons">
-        ${st.currentPlayer && !st.locked ? `
-          <button class="btn btn-gold btn-sm" id="btn-start-timer" onclick="startAuctionTimer()">▶ Start Timer</button>
-          ${!st.paused ? `<button class="btn btn-outline btn-sm" onclick="pauseTimer()">⏸ Pause</button>`
-                       : `<button class="btn btn-outline btn-sm" onclick="resumeTimer()">▶ Resume</button>`}
-        ` : ''}
-        <button class="btn btn-outline btn-sm" onclick="openNextPlayerPicker()" ${!pendingPlayers.length?'disabled':''}>⏭ Next Player</button>
-        ${st.currentPlayer ? '' : `<select class="input" style="height:34px;padding:.3rem .7rem;font-size:.8rem;width:auto" id="player-select" onchange="loadPlayerFromSelect()">
-          <option value="">— Select Player —</option>
-          ${pendingPlayers.map(p=>`<option value="${p.id}">${p.name} (₹${p.basePrice}L)</option>`).join('')}
-        </select>`}
-        <button class="btn btn-danger btn-sm" onclick="resetAuction()">↺ Reset</button>
-      </div>
-    </div>`;
-  } else {
-    ctrlWrap.innerHTML = '';
-  }
-}
-
-function renderBudgets() {
-  const r = APP.currentRoom;
-  const rTeams = teams.filter(t => t.roomId === r.id);
-  const st = APP.auctionState;
-  document.getElementById('auction-budgets').innerHTML = rTeams.map(t => {
-    const usedPct = pct(t.spent, t.budget);
-    const fillColor = usedPct < 50 ? 'var(--green)' : usedPct < 80 ? 'var(--gold)' : 'var(--red)';
-    const isLeading = st.highestTeam === t.id;
-    return `<div class="budget-team ${isLeading?'leading':''}">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div style="display:flex;align-items:center;gap:.5rem">
-          <div style="width:8px;height:8px;border-radius:50%;background:${t.color}"></div>
-          <span style="font-weight:600;font-size:.85rem">${t.name}</span>
-        </div>
-        ${isLeading ? '<span class="badge badge-gold" style="font-size:.6rem">Leading</span>' : ''}
-      </div>
-      <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">₹${fmt(t.remaining)}L / ₹${fmt(t.budget)}L</div>
-      <div class="budget-bar-track">
-        <div class="budget-bar-fill" style="width:${usedPct}%;background:${fillColor}"></div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function renderProgress() {
-  const r = APP.currentRoom;
-  const rPlayers = players.filter(p => p.roomId === r.id);
-  const sold = rPlayers.filter(p => p.status === 'sold').length;
-  const unsold = rPlayers.filter(p => p.status === 'unsold').length;
-  const pending = rPlayers.filter(p => p.status === 'pending').length;
-  document.getElementById('auction-progress').innerHTML = `
-    <div class="mini-item"><div class="bid-dot" style="background:var(--blue)"></div><span style="flex:1">Pending</span><strong class="text-gold">${pending}</strong></div>
-    <div class="mini-item"><div class="bid-dot" style="background:var(--green)"></div><span style="flex:1">Sold</span><strong class="text-green">${sold}</strong></div>
-    <div class="mini-item"><div class="bid-dot" style="background:var(--red)"></div><span style="flex:1">Unsold</span><strong class="text-red">${unsold}</strong></div>`;
-}
-
-function loadPlayerFromSelect() {
-  const sel = document.getElementById('player-select');
-  const pid = sel.value;
-  if (!pid) return;
-  const p = players.find(pl => pl.id === pid);
-  if (!p) return;
-  APP.auctionState.currentPlayer = p;
-  APP.auctionState.highestBid = p.basePrice;
-  APP.auctionState.highestTeam = null;
-  APP.auctionState.highestBidder = null;
-  APP.auctionState.bidHistory = [];
-  APP.auctionState.locked = false;
-  p.status = 'active';
-  renderStage();
-  renderAuction();
-  toast(`${p.name} is on stage! Start timer when ready.`, 'info');
-}
-
-function openNextPlayerPicker() {
-  const r = APP.currentRoom;
-  const pendingPlayers = players.filter(p => p.roomId === r.id && p.status === 'pending');
-  if (!pendingPlayers.length) {
-    completeAuction();
-    return;
-  }
-  // Auto-pick next
-  const next = pendingPlayers[0];
-  clearInterval(APP.auctionTimer);
-  APP.auctionState.timerSeconds = 0;
-  const p = next;
-  p.status = 'active';
-  APP.auctionState.currentPlayer = p;
-  APP.auctionState.highestBid = p.basePrice;
-  APP.auctionState.highestTeam = null;
-  APP.auctionState.highestBidder = null;
-  APP.auctionState.bidHistory = [];
-  APP.auctionState.locked = false;
-  APP.auctionState.paused = false;
-  renderStage();
-  renderAuction();
-  toast(`Next: ${p.name} — Start timer!`, 'info');
-}
-
-function renderStage() {
-  const st = APP.auctionState;
-  const r = APP.currentRoom;
-  const u = APP.currentUser;
-  const isAdmin = u.id === r.adminId;
-  const myTeam = teams.find(t => t.roomId === r.id && t.ownerId === u.id);
-  const p = st.currentPlayer;
-
-  if (!p) {
-    document.getElementById('auction-stage').innerHTML = `
-      <div class="waiting-stage">
-        <div class="waiting-icon">⏳</div>
-        <h2 class="font-cond" style="font-weight:700;font-size:1.3rem;text-transform:uppercase;margin-bottom:.5rem">Waiting for Player</h2>
-        <p class="text-muted text-sm" id="waiting-msg">${isAdmin ? 'Select a player from the controls below' : 'Admin will select the next player'}</p>
+      <div style="margin-top:16px;display:flex;gap:8px;align-items:center">
+        <div class="room-code-badge" style="font-size:11px">${room.id}</div>
+        <button class="btn btn-gold btn-sm" style="margin-left:auto" onclick="joinRoom('${room.id}')">Enter →</button>
       </div>`;
-    document.getElementById('auction-stats-panel').innerHTML = '';
-    return;
-  }
-
-  const catColor = CAT_COLORS[p.category] || '#4b5563';
-  const timerColor = st.timerSeconds <= 5 ? 'var(--red)' : st.timerSeconds <= 10 ? 'var(--gold)' : 'var(--green)';
-  const timerPct = Math.max(0, st.timerSeconds / r.timerDuration);
-  const R = 40, circ = 2 * Math.PI * R;
-  const dash = circ * (1 - timerPct);
-  const minBid = st.highestBid > 0 ? st.highestBid + 1 : p.basePrice;
-
-  const canBid = !isAdmin && !st.locked && myTeam && myTeam.remaining >= minBid && st.timerSeconds > 0;
-
-  document.getElementById('auction-stage').innerHTML = `
-    <div class="stage-card ${!st.locked && st.timerSeconds > 0 ? 'pulse-ring' : ''}">
-      <div class="stage-header-bar"></div>
-      <div class="stage-content">
-        <div style="display:flex;gap:1rem;align-items:flex-start">
-          ${p.image ? `<img class="player-stage-img" src="${p.image}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="player-stage-placeholder" style="display:none">🧑</div>`
-                    : `<div class="player-stage-placeholder">🧑</div>`}
-          <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem">
-              <div>
-                <div class="player-stage-name">${p.name}</div>
-                <div class="player-stage-sub">
-                  ${p.role} · ${p.country} · ${p.age}y
-                  &nbsp;<span class="badge" style="background:${catColor}22;color:${catColor};border:1px solid ${catColor}44">${p.category}</span>
-                </div>
-                <div style="margin-top:.5rem">
-                  <div style="display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:.2rem">
-                    <span class="text-muted">Rating</span><span class="text-gold font-bold">${p.performanceRating}/100</span>
-                  </div>
-                  <div class="rating-bar"><div class="rating-fill" style="width:${p.performanceRating}%"></div></div>
-                </div>
-                <div class="ai-chip" style="margin-top:.45rem">🤖 AI suggests ₹${p.suggestedPrice}L</div>
-              </div>
-              <div class="timer-wrap">
-                <svg width="90" height="90" viewBox="0 0 90 90">
-                  <circle cx="45" cy="45" r="${R}" fill="none" stroke="var(--border2)" stroke-width="5"/>
-                  <circle cx="45" cy="45" r="${R}" fill="none" stroke="${timerColor}" stroke-width="5"
-                    stroke-dasharray="${circ}" stroke-dashoffset="${dash}"
-                    stroke-linecap="round" class="timer-ring"
-                    style="transition:stroke-dashoffset .9s linear,stroke .3s"/>
-                </svg>
-                <div class="timer-text">
-                  <div class="timer-num" style="color:${timerColor}">${st.timerSeconds}</div>
-                  <div class="timer-sub">secs</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style="border-top:1px solid var(--border);margin-top:1rem;padding-top:1rem">
-          <div style="display:flex;align-items:flex-end;justify-content:space-between">
-            <div>
-              <div class="current-bid-label">Current Bid</div>
-              <div class="current-bid-amount" id="live-bid-display">₹${fmt(st.highestBid)}L</div>
-              <div class="bid-by">${st.highestBidder ? `by <strong>${st.highestBidder}</strong>` : 'No bids yet'}</div>
-            </div>
-            <div style="text-align:right">
-              <div class="text-muted" style="font-size:.72rem">Base Price</div>
-              <div class="font-cond" style="font-weight:700;font-size:1.1rem">₹${p.basePrice}L</div>
-            </div>
-          </div>
-
-          ${!isAdmin && !st.locked ? `
-          <div class="bid-input-row">
-            <input class="bid-input" id="bid-amount-input" type="number" placeholder="Min ₹${minBid}L" min="${minBid}" step="0.5">
-            <button class="btn btn-gold" onclick="doPlaceBid()" ${!canBid?'disabled':''} style="padding:.6rem 1.2rem">BID ⚡</button>
-          </div>
-          <div class="quick-bids">
-            ${[minBid, minBid+5, minBid+10, minBid+25, minBid+50].map(a =>
-              `<button class="quick-bid" onclick="document.getElementById('bid-amount-input').value=${a}">₹${a}L</button>`
-            ).join('')}
-          </div>
-          ${myTeam ? `<div style="font-size:.75rem;color:var(--muted);margin-top:.5rem">Your budget: <strong class="text-gold">₹${fmt(myTeam.remaining)}L</strong></div>` : ''}
-          ` : ''}
-
-          ${st.locked ? `
-          <div class="result-banner ${st.highestTeam ? 'sold' : 'unsold'}" style="margin-top:1rem">
-            ${st.highestTeam ? `
-              <div style="font-size:1.5rem">🏆</div>
-              <div class="result-banner-title" style="color:var(--green)">SOLD!</div>
-              <div class="text-muted">₹${fmt(st.highestBid)}L · ${teams.find(t=>t.id===st.highestTeam)?.name}</div>
-            ` : `
-              <div style="font-size:1.5rem">📋</div>
-              <div class="result-banner-title" style="color:var(--red)">UNSOLD</div>
-              <div class="text-muted">No bids received</div>
-            `}
-          </div>` : ''}
-        </div>
-      </div>
-    </div>`;
-
-  // Stats panel (right column)
-  document.getElementById('auction-stats-panel').innerHTML = p.stats?.length ? `
-    <div class="card" style="padding:.9rem">
-      <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.6rem">Player Stats</div>
-      <div class="stats-grid">
-        ${p.stats.filter(s=>s.value>0).map(s=>`
-          <div class="stat-item">
-            <div class="stat-item-val">${s.value}</div>
-            <div class="stat-item-key">${s.label}</div>
-          </div>`).join('')}
-      </div>
-    </div>` : '';
-}
-
-// ── Timer ──────────────────────────────────────────────────────
-function startAuctionTimer() {
-  const st = APP.auctionState;
-  const r = APP.currentRoom;
-  if (!st.currentPlayer || st.locked) return;
-  clearInterval(APP.auctionTimer);
-  st.timerSeconds = r.timerDuration;
-  st.paused = false;
-  renderStage();
-  renderAuction();
-
-  APP.auctionTimer = setInterval(() => {
-    if (st.paused) return;
-    st.timerSeconds--;
-    updateTimerDisplay();
-    if (st.timerSeconds <= 0) {
-      clearInterval(APP.auctionTimer);
-      finalizePlayer();
-    }
-  }, 1000);
-  toast(`Timer started for ${st.currentPlayer.name}!`, 'info');
-}
-
-function pauseTimer() {
-  APP.auctionState.paused = true;
-  toast('Auction paused', 'info');
-  renderAuction();
-}
-function resumeTimer() {
-  APP.auctionState.paused = false;
-  toast('Auction resumed', 'info');
-  renderAuction();
-}
-
-function updateTimerDisplay() {
-  const st = APP.auctionState;
-  const r = APP.currentRoom;
-  const timerColor = st.timerSeconds <= 5 ? 'var(--red)' : st.timerSeconds <= 10 ? 'var(--gold)' : 'var(--green)';
-  const R = 40, circ = 2 * Math.PI * R;
-  const timerPct = Math.max(0, st.timerSeconds / r.timerDuration);
-  const dash = circ * (1 - timerPct);
-
-  const numEl = document.querySelector('.timer-num');
-  const ringEl = document.querySelector('.timer-ring');
-  if (numEl) { numEl.textContent = st.timerSeconds; numEl.style.color = timerColor; }
-  if (ringEl) {
-    ringEl.setAttribute('stroke-dashoffset', dash);
-    ringEl.setAttribute('stroke', timerColor);
-  }
-}
-
-function finalizePlayer() {
-  const st = APP.auctionState;
-  const p = st.currentPlayer;
-  if (!p) return;
-  st.locked = true;
-
-  if (st.highestTeam) {
-    const team = teams.find(t => t.id === st.highestTeam);
-    p.status = 'sold';
-    p.soldTo = team.id;
-    p.soldPrice = st.highestBid;
-    team.remaining -= st.highestBid;
-    team.spent += st.highestBid;
-    team.players.push({ playerId: p.id, price: st.highestBid });
-    toast(`🏆 ${p.name} SOLD to ${team.name} for ₹${fmt(st.highestBid)}L!`, 'success');
-
-    // Add to sold list
-    const soldList = document.getElementById('auction-sold-list');
-    const item = document.createElement('div');
-    item.className = 'mini-item';
-    item.innerHTML = `<div class="bid-dot" style="background:var(--green)"></div><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</span><strong class="text-gold" style="flex-shrink:0">₹${fmt(st.highestBid)}L</strong>`;
-    if (soldList.querySelector('.text-muted')) soldList.innerHTML = '';
-    soldList.insertBefore(item, soldList.firstChild);
-  } else {
-    p.status = 'unsold';
-    toast(`😔 ${p.name} went unsold`, 'info');
-  }
-
-  renderStage();
-  renderBudgets();
-  renderProgress();
-  renderAuction();
-
-  // Check if all done
-  const pending = players.filter(pl => pl.roomId === APP.currentRoom.id && pl.status === 'pending');
-  if (!pending.length) setTimeout(completeAuction, 2000);
-}
-
-function completeAuction() {
-  const r = APP.currentRoom;
-  r.status = 'completed';
-  clearInterval(APP.auctionTimer);
-  document.getElementById('auction-stage').innerHTML = `
-    <div class="complete-wrap">
-      <div style="font-size:3.5rem;margin-bottom:1rem">🏆</div>
-      <h2 class="font-display" style="font-size:2rem;margin-bottom:.5rem">AUCTION COMPLETE!</h2>
-      <p class="text-muted" style="margin-bottom:1.5rem">All players have been auctioned</p>
-      <button class="btn btn-gold" onclick="enterAnalytics('${r.id}')">📊 View Analytics</button>
-    </div>`;
-  toast('Auction complete! 🏆', 'success');
-}
-
-function resetAuction() {
-  if (!confirm('Reset the entire auction? All bids and sales will be cleared.')) return;
-  const r = APP.currentRoom;
-  clearInterval(APP.auctionTimer);
-  players.filter(p => p.roomId === r.id).forEach(p => {
-    p.status = 'pending'; p.soldTo = null; p.soldPrice = null;
+    grid.appendChild(card);
   });
-  teams.filter(t => t.roomId === r.id).forEach(t => {
-    t.remaining = t.budget; t.spent = 0; t.players = [];
+
+  // Populate room selector in add player modal
+  const apRoom = document.getElementById('apRoom');
+  apRoom.innerHTML = '<option value="">Select room...</option>';
+  s.rooms.forEach(r=>{
+    const opt = document.createElement('option');
+    opt.value = r.id; opt.textContent = r.name;
+    apRoom.appendChild(opt);
   });
-  r.status = 'active';
-  APP.auctionState = {
-    active:false, currentPlayerIdx:-1, currentPlayer:null,
-    timerSeconds:0, highestBid:0, highestTeam:null, highestBidder:null,
-    bidHistory:[], locked:false, paused:false, complete:false,
-  };
-  toast('Auction reset', 'info');
-  renderAuction();
-  renderStage();
-  document.getElementById('auction-sold-list').innerHTML = '<div class="text-muted text-sm" style="padding:.5rem 0">None yet</div>';
 }
 
-// ── Bidding ────────────────────────────────────────────────────
-function doPlaceBid() {
-  const st = APP.auctionState;
-  const u = APP.currentUser;
-  const r = APP.currentRoom;
-  const myTeam = teams.find(t => t.roomId === r.id && t.ownerId === u.id);
+function switchLobbyTab(tab) {
+  document.querySelectorAll('.screen-tab').forEach((b,i)=>b.classList.toggle('active',(i===0&&tab==='rooms')||(i===1&&tab==='analytics')));
+  document.getElementById('lobbyRooms').style.display = tab==='rooms'?'block':'none';
+  document.getElementById('lobbyAnalytics').style.display = tab==='analytics'?'block':'none';
+  if(tab==='analytics') renderGlobalAnalytics();
+}
 
-  if (!myTeam) { toast('You need a team to bid', 'error'); return; }
-  if (st.locked) { toast('Bidding is closed', 'error'); return; }
-  if (st.timerSeconds <= 0) { toast('Timer has not started yet', 'error'); return; }
+function joinByCode() {
+  const code = v('joinCode').trim().toUpperCase();
+  const s = getState();
+  const room = s.rooms.find(r=>r.id===code);
+  if(!room) { showToast('Room not found', 'error'); return; }
+  joinRoom(room.id);
+}
 
-  const input = document.getElementById('bid-amount-input');
-  const amount = parseFloat(input.value);
-  const minBid = st.highestBid > 0 ? st.highestBid + 1 : st.currentPlayer.basePrice;
+// ============================================================
+//  ROOMS
+// ============================================================
+function generateRoomId() {
+  return Math.random().toString(36).substring(2,8).toUpperCase();
+}
 
-  if (!amount || amount < minBid) { toast(`Minimum bid is ₹${minBid}L`, 'error'); return; }
-  if (amount > myTeam.remaining) { toast(`Insufficient budget (₹${fmt(myTeam.remaining)}L left)`, 'error'); return; }
-  if (st.highestTeam === myTeam.id) { toast('You are already the highest bidder!', 'error'); return; }
+function createRoom() {
+  const name = v('crRoomName').trim(), sport = v('crSport'), timer = parseInt(v('crTimer')), base = parseFloat(v('crBase'));
+  if(!name) { showToast('Enter room name', 'error'); return; }
+  const id = generateRoomId();
+  setState(s=>{
+    s.rooms.push({id, name, sport, timer, basePrice:base, status:'waiting', currentPlayerIdx:-1, createdBy:currentUser.id, createdAt:Date.now()});
+  });
+  closeModal('createRoomModal');
+  renderLobby();
+  broadcast('STATE_CHANGED', {});
+  showToast(`Room "${name}" created! Code: ${id}`, 'success');
+  setTimeout(()=>joinRoom(id), 500);
+}
 
-  st.highestBid = amount;
-  st.highestTeam = myTeam.id;
-  st.highestBidder = myTeam.name;
-  st.bidHistory.unshift({ amount, teamId:myTeam.id, teamName:myTeam.name, teamColor:myTeam.color, time: new Date().toLocaleTimeString() });
-  if (st.bidHistory.length > 20) st.bidHistory.pop();
+function joinRoom(roomId) {
+  const s = getState();
+  const room = s.rooms.find(r=>r.id===roomId);
+  if(!room) { showToast('Room not found', 'error'); return; }
+  currentRoomId = roomId;
+  showScreen('auctionScreen');
+  renderAuction();
+  renderBidHistory();
+  renderTeamsSidebar();
+  renderPlayerSidebar();
+  broadcast('USER_JOINED', {roomId, userId:currentUser.id, name:currentUser.name});
+  showToast(`Joined ${room.name}`, 'success');
+}
 
-  // Add 5s on bid (excitement!)
-  st.timerSeconds = Math.min(st.timerSeconds + 5, r.timerDuration);
+function leaveRoom() {
+  clearInterval(timerInterval);
+  broadcast('USER_LEFT', {roomId:currentRoomId});
+  currentRoomId = null;
+  showScreen('lobbyScreen');
+  renderLobby();
+}
 
-  input.value = '';
-  updateBidHistory();
+// ============================================================
+//  AUCTION RENDERING
+// ============================================================
+function renderAuction() {
+  if(!currentRoomId) return;
+  const s = getState();
+  const room = s.rooms.find(r=>r.id===currentRoomId);
+  if(!room) return;
+
+  document.getElementById('roomCodeDisplay').textContent = room.id;
+  document.getElementById('roomNameDisplay').textContent = room.name;
+
+  const isAdmin = currentUser.role === 'admin';
+  const adminCtrl = document.getElementById('adminControls');
+  if(isAdmin) { adminCtrl.classList.remove('hidden'); }
+
+  if(room.status === 'waiting') {
+    document.getElementById('waitingStage').style.display='block';
+    document.getElementById('activeStage').style.display='none';
+    document.getElementById('auctionOverStage').style.display='none';
+    document.getElementById('startAuctionBtn').style.display='';
+    document.getElementById('nextPlayerBtn').style.display='none';
+    document.getElementById('aiSuggest').classList.add('hidden');
+  } else if(room.status === 'active') {
+    renderCurrentPlayer(room, s);
+  } else if(room.status === 'complete') {
+    document.getElementById('waitingStage').style.display='none';
+    document.getElementById('activeStage').style.display='none';
+    document.getElementById('auctionOverStage').style.display='block';
+    clearInterval(timerInterval);
+  }
+}
+
+function renderCurrentPlayer(room, s) {
+  const players = s.players.filter(p=>p.roomId===room.id);
+  if(room.currentPlayerIdx < 0 || room.currentPlayerIdx >= players.length) return;
+  const player = players[room.currentPlayerIdx];
+
+  document.getElementById('waitingStage').style.display='none';
+  document.getElementById('activeStage').style.display='block';
+  document.getElementById('auctionOverStage').style.display='none';
+  document.getElementById('startAuctionBtn').style.display='none';
+  document.getElementById('nextPlayerBtn').style.display='';
+
+  // Player info
+  document.getElementById('playerEmoji').querySelector('span').textContent = player.emoji || '🎯';
+  document.getElementById('playerPos').textContent = player.role || 'Player';
+  document.getElementById('playerName').textContent = player.name;
+
+  const meta = document.getElementById('playerMeta');
+  meta.innerHTML = `
+    <div class="meta-chip">🌍 ${player.country||'Unknown'}</div>
+    <div class="meta-chip">🎂 ${player.age||'?'}yrs</div>
+    <div class="meta-chip">🏷 ${player.category||'B'}</div>
+    <div class="meta-chip gold">💰 Base ₹${player.basePrice}Cr</div>
+  `;
+
+  // Rating
+  const rating = player.rating || calcRating(player);
+  document.getElementById('playerRating').textContent = rating;
+  document.getElementById('playerStars').textContent = '⭐'.repeat(Math.min(5,Math.round(rating/20)));
+
+  // Stats
+  const statsGrid = document.getElementById('playerStats');
+  statsGrid.innerHTML = '';
+  (player.stats||[]).forEach(stat=>{
+    const box = document.createElement('div');
+    box.className = 'stat-box';
+    box.innerHTML = `<div class="stat-val">${stat.val}</div><div class="stat-lbl">${stat.key}</div>`;
+    statsGrid.appendChild(box);
+  });
+
+  // Bid display
   updateBidDisplay();
-  renderBudgets();
-  renderStage();
-  renderAuction();
-  toast(`Bid of ₹${fmt(amount)}L placed!`, 'success');
+
+  // AI Suggest
+  showAISuggestion(player, room);
+
+  // Timer
+  if(room.timerEndAt) {
+    const left = Math.max(0, Math.round((room.timerEndAt - Date.now()) / 1000));
+    startClientTimer(left, room);
+  }
+
+  // Show/hide bid input based on role
+  const isBidder = currentUser.role === 'bidder';
+  document.getElementById('bidInputSection').style.display = isBidder ? 'grid' : 'none';
+  document.getElementById('quickBids').style.display = isBidder ? 'flex' : 'none';
+
+  renderTeamsSidebar();
+  renderPlayerSidebar();
 }
 
 function updateBidDisplay() {
-  const st = APP.auctionState;
-  const el = document.getElementById('live-bid-display');
-  if (el) {
-    el.textContent = `₹${fmt(st.highestBid)}L`;
-    el.style.animation = 'none';
-    setTimeout(() => el.style.animation = '', 10);
-  }
+  if(!currentRoomId) return;
+  const s = getState();
+  const room = s.rooms.find(r=>r.id===currentRoomId);
+  if(!room) return;
+  const players = s.players.filter(p=>p.roomId===room.id);
+  const player = players[room.currentPlayerIdx];
+  if(!player) return;
+
+  const roomBids = s.bids.filter(b=>b.roomId===currentRoomId && b.playerId===player.id);
+  const topBid = roomBids.reduce((m,b)=>b.amount>m.amount?b:m, {amount:0, bidderName:'—'});
+
+  document.getElementById('currentBidAmount').textContent = topBid.amount > 0 ? `₹${topBid.amount} Cr` : `₹${player.basePrice} Cr`;
+  document.getElementById('currentBidder').textContent = topBid.bidderName || '—';
+  document.getElementById('basePrice').textContent = `₹${player.basePrice} Cr`;
+
+  // Pre-fill bid input
+  const nextBid = Math.max(topBid.amount, player.basePrice);
+  document.getElementById('bidAmount').value = (nextBid + 0.5).toFixed(1);
 }
 
-function updateBidHistory() {
-  const st = APP.auctionState;
-  const container = document.getElementById('auction-bid-history');
-  if (!st.bidHistory.length) {
-    container.innerHTML = '<div class="text-muted text-sm" style="padding:.5rem 0;text-align:center">No bids yet</div>';
+function renderTeamsSidebar() {
+  const s = getState();
+  const panel = document.getElementById('teamsPanel');
+  panel.innerHTML = '';
+
+  // Find room and current top bidder
+  const room = s.rooms.find(r=>r.id===currentRoomId);
+  let leadingTeam = null;
+  if(room && room.status==='active') {
+    const players = s.players.filter(p=>p.roomId===room.id);
+    const cp = players[room.currentPlayerIdx];
+    if(cp) {
+      const bids = s.bids.filter(b=>b.roomId===currentRoomId && b.playerId===cp.id);
+      const top = bids.reduce((m,b)=>b.amount>m.amount?b:m, {amount:0,bidderId:null});
+      leadingTeam = top.bidderId;
+    }
+  }
+
+  const bidders = s.users.filter(u=>u.role==='bidder');
+  bidders.forEach(u=>{
+    const spent = s.soldPlayers.filter(x=>x.roomId===currentRoomId && x.bidderId===u.id).reduce((a,x)=>a+x.price,0);
+    const remaining = (u.budget||100) - spent;
+    const pct = Math.round((remaining/(u.budget||100))*100);
+    const barColor = pct>50?'var(--green)':pct>25?'var(--gold)':'var(--red)';
+    const isLeading = u.id === leadingTeam;
+    const card = document.createElement('div');
+    card.className = `team-mini ${isLeading?'leading':''}`;
+    card.innerHTML = `
+      <div class="team-mini-top">
+        <span class="team-emoji">${u.emoji||'🎯'}</span>
+        <div>
+          <div class="team-name-s">${u.teamName||u.name} ${isLeading?'🔥':''}</div>
+          <div style="font-size:11px;color:var(--muted)">${spent.toFixed(1)}Cr spent</div>
+        </div>
+      </div>
+      <div class="budget-bar"><div class="budget-fill" style="width:${pct}%;background:${barColor}"></div></div>
+      <div class="budget-text">
+        <span>₹${remaining.toFixed(1)}Cr left</span>
+        <span>${pct}%</span>
+      </div>
+    `;
+    panel.appendChild(card);
+  });
+}
+
+function renderPlayerSidebar() {
+  const s = getState();
+  const room = s.rooms.find(r=>r.id===currentRoomId);
+  if(!room) return;
+  const players = s.players.filter(p=>p.roomId===room.id);
+  const panel = document.getElementById('playerListSidebar');
+  panel.innerHTML = '';
+  players.forEach((p,i)=>{
+    const sold = s.soldPlayers.find(x=>x.playerId===p.id);
+    const isCurrent = i === room.currentPlayerIdx;
+    const div = document.createElement('div');
+    div.className = `player-item ${isCurrent?'current':''} ${sold?'sold':''}`;
+    div.innerHTML = `
+      <span class="player-item-emoji">${p.emoji||'🎯'}</span>
+      <div class="player-item-info">
+        <div class="player-item-name">${p.name}</div>
+        <div class="player-item-meta">${p.role||'Player'} · ₹${p.basePrice}Cr</div>
+      </div>
+      ${sold?`<span class="sold-tag">SOLD</span>`:''}
+      ${(!sold&&room.status==='complete'&&i<room.currentPlayerIdx)?`<span class="unsold-tag">UNSOLD</span>`:''}
+    `;
+    panel.appendChild(div);
+  });
+}
+
+function renderBidHistory() {
+  const s = getState();
+  const room = s.rooms.find(r=>r.id===currentRoomId);
+  if(!room) return;
+  const players = s.players.filter(p=>p.roomId===room.id);
+  const cp = players[room.currentPlayerIdx];
+  if(!cp) return;
+
+  const bids = s.bids.filter(b=>b.roomId===currentRoomId && b.playerId===cp.id).sort((a,b)=>b.amount-a.amount);
+  const hist = document.getElementById('bidHistory');
+  hist.innerHTML = '';
+  bids.slice(0,20).forEach((bid,i)=>{
+    const div = document.createElement('div');
+    div.className = `bid-item ${i===0?'new':''}`;
+    div.style.background = i===0?'rgba(255,215,0,.1)':'var(--bg2)';
+    div.style.borderLeft = `3px solid ${i===0?'var(--gold)':'var(--bg4)'}`;
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong>${bid.bidderName}</strong>
+        <strong class="gold">₹${bid.amount}Cr</strong>
+      </div>
+      <div class="bid-time">${timeAgo(bid.ts)}</div>
+    `;
+    hist.appendChild(div);
+  });
+  if(!bids.length) hist.innerHTML = '<div class="muted" style="text-align:center;padding:20px;font-size:13px">No bids yet</div>';
+}
+
+// ============================================================
+//  BIDDING
+// ============================================================
+function placeBid() {
+  if(currentUser.role !== 'bidder') { showToast('Only bidders can place bids', 'error'); return; }
+  const amount = parseFloat(v('bidAmount'));
+  if(!amount || amount <= 0) { showToast('Enter a valid bid amount', 'error'); return; }
+
+  const s = getState();
+  const room = s.rooms.find(r=>r.id===currentRoomId);
+  if(!room || room.status !== 'active') { showToast('Auction is not active', 'error'); return; }
+
+  const players = s.players.filter(p=>p.roomId===room.id);
+  const cp = players[room.currentPlayerIdx];
+  if(!cp) return;
+
+  // Check existing bids
+  const existingBids = s.bids.filter(b=>b.roomId===currentRoomId && b.playerId===cp.id);
+  const topBid = existingBids.reduce((m,b)=>b.amount>m.amount?b:m, {amount:cp.basePrice-0.5});
+
+  if(amount <= topBid.amount) {
+    showToast(`Bid must be above ₹${topBid.amount}Cr`, 'error');
+    document.getElementById('bidAmount').style.animation = 'shake .3s ease';
+    setTimeout(()=>document.getElementById('bidAmount').style.animation='',300);
     return;
   }
-  container.innerHTML = st.bidHistory.slice(0,10).map((b,i) => `
-    <div class="bid-item ${i===0?'top':''}">
-      <div class="bid-dot" style="background:${b.teamColor||'#6366f1'}"></div>
-      <span style="flex:1;color:${b.teamColor||'#94a3b8'};font-weight:600">${b.teamName}</span>
-      <strong class="text-gold">₹${fmt(b.amount)}L</strong>
-    </div>`).join('');
+
+  // Check budget
+  const bidderUser = s.users.find(u=>u.id===currentUser.id);
+  const spent = s.soldPlayers.filter(x=>x.roomId===currentRoomId && x.bidderId===currentUser.id).reduce((a,x)=>a+x.price,0);
+  const remaining = (bidderUser?.budget||100) - spent;
+  if(amount > remaining) { showToast(`Insufficient budget! You have ₹${remaining.toFixed(1)}Cr left`, 'error'); return; }
+
+  // Timer check
+  if(room.timerEndAt && Date.now() > room.timerEndAt) { showToast('Timer expired!', 'error'); return; }
+
+  const bid = {
+    id: 'bid'+Date.now(),
+    roomId: currentRoomId,
+    playerId: cp.id,
+    bidderId: currentUser.id,
+    bidderName: currentUser.teamName || currentUser.name,
+    amount, ts: Date.now()
+  };
+
+  setState(s=>{
+    s.bids.push(bid);
+  });
+
+  broadcast('BID_PLACED', {roomId:currentRoomId, ...bid});
+  flashBid(bid);
+  renderBidHistory();
+  renderTeamsSidebar();
+  updateBidDisplay();
+  showToast(`Bid of ₹${amount}Cr placed!`, 'success');
+  document.getElementById('bidAmount').value = (amount+0.5).toFixed(1);
 }
 
-// ══════════════════════════════════════════════════════════════
+function quickBid(increment) {
+  const s = getState();
+  const room = s.rooms.find(r=>r.id===currentRoomId);
+  if(!room) return;
+  const players = s.players.filter(p=>p.roomId===room.id);
+  const cp = players[room.currentPlayerIdx];
+  if(!cp) return;
+  const bids = s.bids.filter(b=>b.roomId===currentRoomId && b.playerId===cp.id);
+  const top = bids.reduce((m,b)=>b.amount>m.amount?b:m, {amount:cp.basePrice});
+  document.getElementById('bidAmount').value = (top.amount+increment).toFixed(1);
+}
+
+function flashBid(bid) {
+  const el = document.getElementById('currentBidAmount');
+  el.style.animation='none';
+  el.offsetHeight;
+  el.style.animation='countPulse .5s ease';
+}
+
+// ============================================================
+//  AUCTION CONTROL (Admin)
+// ============================================================
+function startAuction() {
+  if(currentUser.role !== 'admin') return;
+  const s = getState();
+  const players = s.players.filter(p=>p.roomId===currentRoomId);
+  if(!players.length) { showToast('Add players first!', 'error'); return; }
+  const room = s.rooms.find(r=>r.id===currentRoomId);
+
+  setState(s=>{
+    const r = s.rooms.find(x=>x.id===currentRoomId);
+    r.status = 'active';
+    r.currentPlayerIdx = 0;
+    r.timerEndAt = Date.now() + (r.timer*1000);
+  });
+
+  broadcast('AUCTION_STARTED', {roomId:currentRoomId});
+  renderAuction();
+  showToast('Auction started!', 'success');
+
+  const updRoom = getState().rooms.find(r=>r.id===currentRoomId);
+  startClientTimer(updRoom.timer, updRoom);
+}
+
+function nextPlayer() {
+  if(currentUser.role !== 'admin') return;
+  clearInterval(timerInterval);
+  const s = getState();
+  const room = s.rooms.find(r=>r.id===currentRoomId);
+  const players = s.players.filter(p=>p.roomId===room.id);
+
+  // Finalize current player
+  finalizeCurrentPlayer(room, s);
+
+  const nextIdx = room.currentPlayerIdx + 1;
+  if(nextIdx >= players.length) {
+    setState(s=>{
+      const r = s.rooms.find(x=>x.id===currentRoomId);
+      r.status = 'complete';
+    });
+    broadcast('STATE_CHANGED', {});
+    renderAuction();
+    showToast('Auction complete!', 'success');
+    return;
+  }
+
+  const nextPlayerData = players[nextIdx];
+  setState(s=>{
+    const r = s.rooms.find(x=>x.id===currentRoomId);
+    r.currentPlayerIdx = nextIdx;
+    r.timerEndAt = Date.now() + (r.timer*1000);
+  });
+
+  broadcast('NEXT_PLAYER', {roomId:currentRoomId, playerName:nextPlayerData.name});
+  renderAuction();
+  const updRoom = getState().rooms.find(r=>r.id===currentRoomId);
+  startClientTimer(updRoom.timer, updRoom);
+}
+
+function finalizeCurrentPlayer(room, s) {
+  const players = s.players.filter(p=>p.roomId===room.id);
+  const cp = players[room.currentPlayerIdx];
+  if(!cp) return;
+  const bids = s.bids.filter(b=>b.roomId===room.id && b.playerId===cp.id);
+  const topBid = bids.reduce((m,b)=>b.amount>m.amount?b:m, {amount:0,bidderId:null,bidderName:'—'});
+
+  if(topBid.amount >= cp.basePrice && topBid.bidderId) {
+    setState(st=>{
+      const existing = st.soldPlayers.find(x=>x.playerId===cp.id);
+      if(!existing) {
+        st.soldPlayers.push({playerId:cp.id, roomId:room.id, bidderId:topBid.bidderId, bidderName:topBid.bidderName, price:topBid.amount, ts:Date.now()});
+      }
+    });
+    broadcast('PLAYER_SOLD', {roomId:room.id, playerName:cp.name, teamName:topBid.bidderName, price:topBid.amount});
+    showSoldOverlay({playerName:cp.name, teamName:topBid.bidderName, price:topBid.amount});
+  } else {
+    showToast(`${cp.name} went UNSOLD`, 'info');
+  }
+  broadcast('STATE_CHANGED', {});
+}
+
+function resetAuction() {
+  if(currentUser.role !== 'admin') return;
+  if(!confirm('Reset this auction? All bids and sold data will be cleared.')) return;
+  clearInterval(timerInterval);
+  setState(s=>{
+    const r = s.rooms.find(x=>x.id===currentRoomId);
+    r.status = 'waiting'; r.currentPlayerIdx = -1; r.timerEndAt = null;
+    s.bids = s.bids.filter(b=>b.roomId !== currentRoomId);
+    s.soldPlayers = s.soldPlayers.filter(x=>x.roomId !== currentRoomId);
+  });
+  broadcast('AUCTION_RESET', {roomId:currentRoomId});
+  renderAuction();
+  renderBidHistory();
+  showToast('Auction reset!', 'info');
+}
+
+// ============================================================
+//  TIMER
+// ============================================================
+function startClientTimer(seconds, room) {
+  clearInterval(timerInterval);
+  timerLeft = seconds;
+  updateTimerUI(timerLeft, room.timer);
+
+  timerInterval = setInterval(()=>{
+    timerLeft--;
+    updateTimerUI(timerLeft, room.timer);
+    if(timerLeft <= 0) {
+      clearInterval(timerInterval);
+      if(currentUser.role === 'admin') {
+        setTimeout(()=>nextPlayer(), 1000);
+      }
+    }
+  }, 1000);
+}
+
+function updateTimerUI(left, total) {
+  const el = document.getElementById('timerNum');
+  const circle = document.getElementById('timerCircle');
+  if(!el||!circle) return;
+  el.textContent = Math.max(0,left);
+  circle.className = 'timer-circle ' + (left<=5?'danger':left<=15?'warning':'safe');
+}
+
+// ============================================================
+//  PLAYERS
+// ============================================================
+const SPORT_STATS = {
+  cricket: [{key:'Matches',val:0},{key:'Runs',val:0},{key:'Avg',val:0},{key:'S/R',val:0},{key:'Wickets',val:0},{key:'Economy',val:0},{key:'HS',val:0}],
+  football: [{key:'Matches',val:0},{key:'Goals',val:0},{key:'Assists',val:0},{key:'Pass%',val:0},{key:'Tackles',val:0},{key:'YC',val:0}],
+  basketball: [{key:'PPG',val:0},{key:'Assists',val:0},{key:'Rebounds',val:0},{key:'Steals',val:0},{key:'Blocks',val:0},{key:'FG%',val:0}],
+  custom: [{key:'Stat1',val:0},{key:'Stat2',val:0},{key:'Stat3',val:0}]
+};
+
+function updateStatTemplate() {
+  renderStatFields(v('crSport')||'cricket');
+}
+
+function renderStatFields(sport) {
+  const container = document.getElementById('statFields');
+  container.innerHTML = '';
+  (SPORT_STATS[sport]||SPORT_STATS.custom).forEach(s=>{
+    const div = document.createElement('div');
+    div.className = 'form-group';
+    div.innerHTML = `<label>${s.key}</label><input type="number" data-key="${s.key}" placeholder="0" value="0" step="0.1">`;
+    container.appendChild(div);
+  });
+}
+
+function addCustomStatField() {
+  const container = document.getElementById('statFields');
+  const key = prompt('Stat name:'); if(!key) return;
+  const div = document.createElement('div');
+  div.className = 'form-group';
+  div.innerHTML = `<label>${key}</label><input type="number" data-key="${key}" placeholder="0" value="0">`;
+  container.appendChild(div);
+}
+
+function addPlayer() {
+  const name = v('apName').trim(), emoji = v('apEmoji')||'🎯', age = parseInt(v('apAge')), country = v('apCountry').trim(), role = v('apRole').trim(), base = parseFloat(v('apBase')), category = v('apCategory'), roomId = v('apRoom');
+  if(!name || !roomId) { showToast('Fill player name and select room', 'error'); return; }
+
+  const statInputs = document.querySelectorAll('#statFields input[data-key]');
+  const stats = Array.from(statInputs).map(i=>({key:i.dataset.key, val:parseFloat(i.value)||0}));
+
+  const player = {id:'p'+Date.now(), roomId, name, emoji, age, country, role, basePrice:base, category, stats, rating:calcRatingFromStats(stats, category), createdAt:Date.now()};
+
+  setState(s=>{ s.players.push(player); });
+  closeModal('addPlayerModal');
+  broadcast('STATE_CHANGED', {});
+  renderLobby();
+  if(currentRoomId) renderPlayerSidebar();
+  showToast(`${name} added!`, 'success');
+}
+
+function calcRating(player) {
+  return calcRatingFromStats(player.stats||[], player.category||'B');
+}
+
+function calcRatingFromStats(stats, category) {
+  if(!stats.length) return 50;
+  const vals = stats.map(s=>parseFloat(s.val)||0);
+  const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
+  const catBonus = {A:15,B:5,C:-5}[category?.replace('+','')] || 0;
+  const catPlusBonus = category?.includes('+') ? 10 : 0;
+  return Math.min(99, Math.max(50, Math.round(avg*1.2 + catBonus + catPlusBonus + 40)));
+}
+
+// ============================================================
+//  AI PRICE SUGGESTION
+// ============================================================
+function showAISuggestion(player, room) {
+  const rating = player.rating || calcRating(player);
+  const base = player.basePrice;
+  const suggestedMult = 1 + (rating/100)*3;
+  const suggested = (base * suggestedMult).toFixed(1);
+  const confidence = rating > 80 ? 'High' : rating > 65 ? 'Medium' : 'Low';
+  document.getElementById('aiSuggest').classList.remove('hidden');
+  document.getElementById('aiPrice').textContent = `₹${suggested} Cr`;
+  document.getElementById('aiNote').textContent = `Based on ${rating}/100 rating · ${confidence} confidence`;
+}
+
+// ============================================================
+//  SOLD OVERLAY
+// ============================================================
+function showSoldOverlay(data) {
+  const overlay = document.getElementById('soldOverlay');
+  const card = document.getElementById('soldCard');
+  document.getElementById('soldPlayerName').textContent = data.playerName;
+  document.getElementById('soldToTeam').textContent = data.teamName;
+  document.getElementById('soldForPrice').textContent = `₹${data.price}Cr`;
+  document.getElementById('soldText').textContent = 'SOLD!';
+  card.className = 'sold-card';
+  overlay.classList.remove('hidden');
+
+  let count = 4;
+  const countdown = document.getElementById('soldCountdown');
+  const cd = setInterval(()=>{
+    count--;
+    countdown.textContent = `Continuing in ${count}...`;
+    if(count<=0){ clearInterval(cd); overlay.classList.add('hidden'); renderAuction(); renderPlayerSidebar(); renderBidHistory(); }
+  },1000);
+}
+
+// ============================================================
 //  ANALYTICS
-// ══════════════════════════════════════════════════════════════
-function enterAnalytics(roomId) {
-  APP.currentRoom = rooms.find(r => r.id === roomId);
-  goTo('analytics');
-  renderAnalytics();
+// ============================================================
+let charts = {};
+
+function showAnalytics() {
+  document.getElementById('analyticsOverlay').classList.remove('hidden');
+  renderAnalyticsView();
+}
+function hideAnalytics() {
+  document.getElementById('analyticsOverlay').classList.add('hidden');
+  Object.values(charts).forEach(c=>c.destroy&&c.destroy());
+  charts = {};
 }
 
-function renderAnalytics() {
-  const r = APP.currentRoom;
-  const rPlayers = players.filter(p => p.roomId === r.id);
-  const rTeams = teams.filter(t => t.roomId === r.id);
-  const sold = rPlayers.filter(p => p.status === 'sold');
-  const unsold = rPlayers.filter(p => p.status === 'unsold');
+function renderAnalyticsView() {
+  const s = getState();
+  const sold = currentRoomId ? s.soldPlayers.filter(x=>x.roomId===currentRoomId) : s.soldPlayers;
+  const bidders = s.users.filter(u=>u.role==='bidder');
 
-  document.getElementById('analytics-sub').textContent = `${r.name} · ${r.sport}`;
+  // Summary
+  const totalSpent = sold.reduce((a,x)=>a+x.price,0);
+  const mostExp = sold.reduce((m,x)=>x.price>m.price?x:m, {price:0,playerName:'—',bidderName:'—'});
+  document.getElementById('analyticsSummary').innerHTML = `
+    <div class="summary-card"><div class="summary-num gold">${sold.length}</div><div class="summary-lbl">Players Sold</div></div>
+    <div class="summary-card"><div class="summary-num green">₹${totalSpent.toFixed(1)}Cr</div><div class="summary-lbl">Total Spent</div></div>
+    <div class="summary-card"><div class="summary-num blue">₹${mostExp.price}Cr</div><div class="summary-lbl">Highest Bid</div></div>
+    <div class="summary-card"><div class="summary-num">${bidders.length}</div><div class="summary-lbl">Active Teams</div></div>
+  `;
 
-  const totalSpent = sold.reduce((s,p) => s + (p.soldPrice||0), 0);
-  const avgPrice = sold.length ? Math.round(totalSpent/sold.length) : 0;
-  const topPlayer = sold.sort((a,b)=>(b.soldPrice||0)-(a.soldPrice||0))[0];
+  // Charts
+  const container = document.getElementById('analyticsCharts');
+  container.innerHTML = `
+    <div class="chart-card"><div class="chart-title">Team Spending</div><div class="chart-canvas-wrap"><canvas id="chartSpending"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Budget Usage %</div><div class="chart-canvas-wrap"><canvas id="chartBudget"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Players per Team</div><div class="chart-canvas-wrap"><canvas id="chartPlayers"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Bid Distribution</div><div class="chart-canvas-wrap"><canvas id="chartBids"></canvas></div></div>
+  `;
 
-  document.getElementById('analytics-stats').innerHTML = [
-    { val:rPlayers.length, lbl:'Total Players', icon:'👥' },
-    { val:sold.length, lbl:'Sold', icon:'🏆', color:'var(--green)' },
-    { val:unsold.length, lbl:'Unsold', icon:'📋', color:'var(--red)' },
-    { val:`₹${fmt(totalSpent)}L`, lbl:'Total Spent', icon:'💰', color:'var(--gold)' },
-  ].map(s => `<div class="stat-card"><div style="font-size:1.5rem">${s.icon}</div>
-    <div class="stat-val" style="${s.color?'color:'+s.color:''}">${s.val}</div>
-    <div class="stat-lbl">${s.lbl}</div></div>`).join('');
+  const labels = bidders.map(u=>u.teamName||u.name);
+  const spending = bidders.map(u=>sold.filter(x=>x.bidderId===u.id).reduce((a,x)=>a+x.price,0));
+  const budgetPct = bidders.map((u,i)=>Math.round((spending[i]/(u.budget||100))*100));
+  const playerCounts = bidders.map(u=>sold.filter(x=>x.bidderId===u.id).length);
+  const colors = ['rgba(255,215,0,.8)','rgba(0,180,255,.8)','rgba(0,230,118,.8)','rgba(155,89,182,.8)'];
 
-  // Destroy old charts
-  Object.values(APP.charts).forEach(c => c.destroy());
-  APP.charts = {};
+  setTimeout(()=>{
+    charts.spending = new Chart(document.getElementById('chartSpending'), {
+      type:'bar',
+      data:{labels,datasets:[{label:'Spent (₹Cr)',data:spending,backgroundColor:colors,borderRadius:8}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#7A8BA0'}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#7A8BA0'}}}}
+    });
+    charts.budget = new Chart(document.getElementById('chartBudget'), {
+      type:'doughnut',
+      data:{labels,datasets:[{data:budgetPct,backgroundColor:colors,borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7A8BA0'}}}}
+    });
+    charts.players = new Chart(document.getElementById('chartPlayers'), {
+      type:'bar',
+      data:{labels,datasets:[{label:'Players',data:playerCounts,backgroundColor:colors,borderRadius:8}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#7A8BA0'}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#7A8BA0',stepSize:1}}}}
+    });
 
-  const colors = rTeams.map(t => t.color || '#6366f1');
+    const allBidAmounts = s.bids.filter(b=>!currentRoomId||b.roomId===currentRoomId).map(b=>b.amount);
+    const histBuckets = [0,5,10,15,20,30,50];
+    const histData = histBuckets.slice(0,-1).map((lo,i)=>allBidAmounts.filter(a=>a>=lo&&a<histBuckets[i+1]).length);
+    const histLabels = histBuckets.slice(0,-1).map((lo,i)=>`₹${lo}-${histBuckets[i+1]}Cr`);
+    charts.bids = new Chart(document.getElementById('chartBids'), {
+      type:'bar',
+      data:{labels:histLabels,datasets:[{label:'Bids',data:histData,backgroundColor:'rgba(255,215,0,.6)',borderRadius:6}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#7A8BA0'}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#7A8BA0',stepSize:1}}}}
+    });
+  },100);
 
-  // Spending bar chart
-  const ctx1 = document.getElementById('chart-spending').getContext('2d');
-  APP.charts.spending = new Chart(ctx1, {
-    type: 'bar',
-    data: {
-      labels: rTeams.map(t => t.short || t.name),
-      datasets: [{
-        label: '₹ Spent (Lakhs)',
-        data: rTeams.map(t => t.spent),
-        backgroundColor: colors.map(c => c + 'cc'),
-        borderColor: colors,
-        borderWidth: 2,
-        borderRadius: 6,
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { color: '#888' }, grid: { color: 'rgba(255,255,255,.05)' } },
-        y: { ticks: { color: '#888' }, grid: { color: 'rgba(255,255,255,.05)' } }
-      }
-    }
-  });
-
-  // Budget usage doughnut
-  const ctx2 = document.getElementById('chart-budget').getContext('2d');
-  APP.charts.budget = new Chart(ctx2, {
-    type: 'doughnut',
-    data: {
-      labels: rTeams.map(t => t.name),
-      datasets: [{
-        data: rTeams.map(t => Math.round(t.spent/t.budget*100)),
-        backgroundColor: colors.map(c => c + 'cc'),
-        borderColor: colors,
-        borderWidth: 2,
-      }]
-    },
-    options: {
-      responsive: true,
-      cutout: '68%',
-      plugins: {
-        legend: { position: 'bottom', labels: { color: '#888', boxWidth: 10, padding: 12 } },
-        tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.raw}%` } }
-      }
-    }
-  });
-
-  // Scatter: rating vs price
-  const scatterData = sold.map(p => ({ x: p.performanceRating, y: p.soldPrice||0, label: p.name }));
-  const ctx3 = document.getElementById('chart-scatter').getContext('2d');
-  APP.charts.scatter = new Chart(ctx3, {
-    type: 'scatter',
-    data: {
-      datasets: [{
-        label: 'Players',
-        data: scatterData,
-        backgroundColor: 'rgba(245,166,35,.7)',
-        pointRadius: 7,
-        pointHoverRadius: 10,
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: ctx => `${scatterData[ctx.dataIndex]?.label || ''}: Rating ${ctx.parsed.x}, ₹${ctx.parsed.y}L`
-          }
-        }
-      },
-      scales: {
-        x: { title: { display: true, text: 'Rating', color: '#888' }, ticks: { color: '#888' }, grid: { color: 'rgba(255,255,255,.05)' } },
-        y: { title: { display: true, text: '₹L', color: '#888' }, ticks: { color: '#888' }, grid: { color: 'rgba(255,255,255,.05)' } }
-      }
-    }
-  });
-
-  // Top players list
-  const sortedSold = [...sold].sort((a,b) => (b.soldPrice||0) - (a.soldPrice||0));
-  const rankColors = ['var(--gold)', '#94a3b8', '#b45309'];
-  document.getElementById('analytics-top-players').innerHTML = sortedSold.slice(0,5).map((p,i) => {
-    const team = teams.find(t => t.id === p.soldTo);
-    return `<div class="top-player-row">
-      <div class="top-player-rank ${i===0?'gold':''}">${i+1}</div>
-      <div class="top-player-info">
-        <div class="top-player-name">${p.name}</div>
-        <div class="top-player-team" style="color:${team?.color||'var(--muted)'}">${team?.name||'Unknown'}</div>
-      </div>
-      <div style="text-align:right">
-        <div class="text-gold font-bold font-cond" style="font-size:1.05rem">₹${fmt(p.soldPrice||0)}L</div>
-        <div class="text-muted" style="font-size:.72rem">${Math.round((p.soldPrice||0)/(p.basePrice||1)*10)/10}x base</div>
-      </div>
-    </div>`;
-  }).join('') || '<div class="text-muted text-sm" style="padding:1rem;text-align:center">No players sold yet</div>';
+  // Sold table
+  document.getElementById('soldPlayersTable').innerHTML = sold.length ? `
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr style="border-bottom:1px solid rgba(255,255,255,.1);text-align:left;color:var(--muted);font-family:'Rajdhani',sans-serif;letter-spacing:1px;text-transform:uppercase">
+        <th style="padding:8px">Player</th><th style="padding:8px">Team</th><th style="padding:8px">Price</th>
+      </tr></thead>
+      <tbody>${sold.map(x=>`<tr style="border-bottom:1px solid rgba(255,255,255,.04)">
+        <td style="padding:10px">${x.playerName}</td>
+        <td style="padding:10px">${x.bidderName}</td>
+        <td style="padding:10px" class="gold font-weight:700">₹${x.price}Cr</td>
+      </tr>`).join('')}</tbody>
+    </table>
+  ` : '<div class="muted" style="padding:20px;text-align:center">No sold players yet</div>';
 }
 
-function exportPDF() {
-  const r = APP.currentRoom;
-  const rPlayers = players.filter(p => p.roomId === r.id);
-  const rTeams = teams.filter(t => t.roomId === r.id);
-  const sold = rPlayers.filter(p => p.status === 'sold');
-
-  let txt = `PROBID ARENA — AUCTION REPORT\n`;
-  txt += `${'='.repeat(50)}\n`;
-  txt += `Room: ${r.name} | Sport: ${r.sport} | Date: ${new Date().toLocaleDateString()}\n\n`;
-
-  txt += `SUMMARY\n${'-'.repeat(30)}\n`;
-  txt += `Total Players: ${rPlayers.length}\n`;
-  txt += `Sold: ${sold.length} | Unsold: ${rPlayers.filter(p=>p.status==='unsold').length}\n`;
-  txt += `Total Spent: ₹${fmt(sold.reduce((s,p)=>s+(p.soldPrice||0),0))}L\n\n`;
-
-  txt += `TEAM SPENDING\n${'-'.repeat(30)}\n`;
-  rTeams.forEach(t => {
-    txt += `${t.name}: ₹${fmt(t.spent)}L / ₹${fmt(t.budget)}L (${pct(t.spent,t.budget)}%)\n`;
-  });
-
-  txt += `\nSOLD PLAYERS\n${'-'.repeat(30)}\n`;
-  sold.sort((a,b)=>(b.soldPrice||0)-(a.soldPrice||0)).forEach(p => {
-    const team = rTeams.find(t=>t.id===p.soldTo);
-    txt += `${p.name} → ${team?.name||'?'} at ₹${fmt(p.soldPrice||0)}L (base ₹${p.basePrice}L)\n`;
-  });
-
-  const blob = new Blob([txt], { type: 'text/plain' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `probid-${r.name.replace(/\s+/g,'-')}-report.txt`;
-  a.click();
-  toast('Report exported!', 'success');
+function renderGlobalAnalytics() {
+  const s = getState();
+  const sold = s.soldPlayers;
+  const totalSpent = sold.reduce((a,x)=>a+x.price,0);
+  const avgPrice = sold.length ? (totalSpent/sold.length).toFixed(1) : 0;
+  document.getElementById('globalSummary').innerHTML = `
+    <div class="summary-card"><div class="summary-num gold">${s.rooms.length}</div><div class="summary-lbl">Total Rooms</div></div>
+    <div class="summary-card"><div class="summary-num">${s.players.length}</div><div class="summary-lbl">Total Players</div></div>
+    <div class="summary-card"><div class="summary-num green">${sold.length}</div><div class="summary-lbl">Sold</div></div>
+    <div class="summary-card"><div class="summary-num blue">₹${avgPrice}Cr</div><div class="summary-lbl">Avg Price</div></div>
+  `;
 }
 
-// ══════════════════════════════════════════════════════════════
-//  BOOT
-// ══════════════════════════════════════════════════════════════
-goTo('auth');
+function downloadPDF() {
+  const s = getState();
+  const sold = currentRoomId ? s.soldPlayers.filter(x=>x.roomId===currentRoomId) : s.soldPlayers;
+  const totalSpent = sold.reduce((a,x)=>a+x.price,0);
+  const win = window.open('', '_blank');
+  win.document.write(`<html><head><title>ProBid Arena - Auction Report</title><style>
+    body{font-family:Arial,sans-serif;padding:40px;color:#333}
+    h1{color:#000;margin-bottom:8px}
+    .sub{color:#666;margin-bottom:32px}
+    table{width:100%;border-collapse:collapse;margin-top:20px}
+    th{background:#f0f0f0;padding:12px;text-align:left;font-size:12px;letter-spacing:1px;text-transform:uppercase}
+    td{padding:12px;border-bottom:1px solid #eee;font-size:14px}
+    .stat{display:inline-block;padding:8px 20px;background:#f5f5f5;border-radius:8px;margin:4px;text-align:center}
+    .stat strong{display:block;font-size:24px;color:#000}
+    .stat span{font-size:12px;color:#666;text-transform:uppercase;letter-spacing:1px}
+  </style></head><body>
+    <h1>🏆 ProBid Arena — Auction Report</h1>
+    <p class="sub">Generated on ${new Date().toLocaleString()}</p>
+    <div>
+      <div class="stat"><strong>${sold.length}</strong><span>Sold</span></div>
+      <div class="stat"><strong>₹${totalSpent.toFixed(1)}Cr</strong><span>Total Spent</span></div>
+    </div>
+    <table>
+      <thead><tr><th>#</th><th>Player</th><th>Team</th><th>Final Price</th></tr></thead>
+      <tbody>${sold.map((x,i)=>`<tr><td>${i+1}</td><td>${x.playerName}</td><td>${x.bidderName}</td><td><strong>₹${x.price}Cr</strong></td></tr>`).join('')}</tbody>
+    </table>
+  </body></html>`);
+  win.document.close();
+  win.print();
+}
+
+// ============================================================
+//  STAT FIELDS INIT
+// ============================================================
+function initStatFields() {
+  renderStatFields('cricket');
+  // Update on sport change in create room
+  document.getElementById('crSport')?.addEventListener('change', function(){ renderStatFields(this.value); });
+}
+
+// ============================================================
+//  MODALS
+// ============================================================
+function openModal(id) {
+  document.getElementById(id).classList.remove('hidden');
+  if(id === 'addPlayerModal') initStatFields();
+}
+function closeModal(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+// Close on backdrop click
+document.querySelectorAll('.modal-overlay').forEach(mo=>{
+  mo.addEventListener('click', e=>{
+    if(e.target === mo) mo.classList.add('hidden');
+  });
+});
+
+// ============================================================
+//  UTILITIES
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>{
+    s.classList.add('hidden');
+    s.style.display='';
+  });
+  const el = document.getElementById(id);
+  el.classList.remove('hidden');
+  if(id==='auctionScreen') el.style.display='block';
+}
+
+function v(id) { return document.getElementById(id)?.value || ''; }
+
+function showToast(msg, type='success') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(()=>t.remove(), 4000);
+}
+
+function timeAgo(ts) {
+  const diff = Math.round((Date.now()-ts)/1000);
+  if(diff<5) return 'just now';
+  if(diff<60) return `${diff}s ago`;
+  return `${Math.round(diff/60)}m ago`;
+}
+
+function updateOnlineCount(roomId) {
+  // In a real app this would be server-tracked
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+initState();
+showScreen('loginScreen');
+initStatFields();
+
+// Pre-populate stat fields when add player modal might use cricket
+document.getElementById('crSport')?.addEventListener('change', function(){
+  renderStatFields(this.value);
+});
 </script>
 </body>
 </html>
-
